@@ -34,7 +34,10 @@ import java.util.LinkedList;
 public class Robot 
 {
 	public boolean boolexecuter = true;
-	Map<String, Integer> variableValues = new HashMap<>();
+	public Map<String, Integer> variableValues = new HashMap<>();
+	public ArrayList<String> variablesAuxiliares = new ArrayList<>();
+	public Map<String, ArrayList<String>> procParams = new HashMap<>();
+	public Map<String, ArrayList<String>> procBloques = new HashMap<>();
 	public ArrayList<String > strct_tokens = new ArrayList <String>();
 	int chipshere;
 
@@ -57,39 +60,25 @@ SKIP:
 	| "\n"
 }
 
-
-TOKEN: /* Nombres de Comandos, estos vienen por defecto */
-{
-
-			<MOV:  "Mov">
-		| <RIGHT: ":right">
-		| < PUT: "put">
-		| < PICK: "pick">
-		|  < POP: "Pop" >
-		|  <GO: "GO" >
-        |  < HOP:  "skip" >		
-
-}
 TOKEN: /* Direcciones */
 {
-
-	< LEFT: ":left" >
+	< RIGHT: ":right" >
+	| < LEFT: ":left" >
 	| < FRONT: ":front" >
 	| < BACK: ":back" >
 	| < AROUND: ":around" >
 }
+
 TOKEN:
 {
-		<BALLOONS:  ":ballons" >
-		|	<CHIPS:     ":chips"  >
-
-
+	< BALLOONS: ":balloons" >
+	| < CHIPS: ":chips"  >
 }
 
 TOKEN:
 {
-		<REPEAT:  "repeat" >
-
+	< REPEAT:  "repeat" >
+	| < LOOP: "loop" >
 }
 
 TOKEN: /* orientaciones */
@@ -112,28 +101,27 @@ TOKEN: /* constantes */
 	| < SPACES: "Spaces" >
 }
 
-
 TOKEN: /* Commandos */
 {
-			< MOVE:  "move">
-		|	< EQUAL: "=">
-		|	< DEFVAR: "defvar">
-		|	< TURN: "turn">
-		| 	< FACE: "face">
-		| 	< MOVEDIR: "move-dir">
-		| 	< RUNDIRS: "run-dirs">
-		| 	< MOVEFACE: "move-face">
-		| 	< NULL: "null">
-		|   < DEFUN: "defun" >
-
-	
+	< MOVE:  "move">
+	| < EQUAL: "=">
+	| < DEFVAR: "defvar">
+	| < TURN: "turn">
+	| < FACE: "face">
+	| < MOVEDIR: "move-dir">
+	| < RUNDIRS: "run-dirs">
+	| < MOVEFACE: "move-face">
+	| < NULL: "null">
+	| < PUT: "put">
+	| < PICK: "pick" >
+    | < HOP:  "skip" >	
+	| < DEFUN: "defun" >
 }
 
 TOKEN :
 {
-		 	< RBRACKET: "(" >
-		| 	< LBRACKET: ")" >
-        
+	 < RBRACKET: ")" >
+	| < LBRACKET: "(" >       
 }
 
 TOKEN: /*Condicionales*/
@@ -150,7 +138,7 @@ TOKEN: /*Condicionales*/
 
 TOKEN :
 {
-  <NAME : (< LETTER >)* >
+  <NAME : (< LETTER >)+ >
 | < #LETTER   : ["a"-"z","A"-"Z"] >
 }
 
@@ -162,62 +150,59 @@ TOKEN :
 |   < #INITIALDIGIT: ["1"-"9"]>
 }
 
-	//boolean command(uniandes.lym.robot.view.Console sistema) :
-	boolean command(Console sistema):
-	{	
-		int x,y;
-		salida=new String();		
-	}
-	{
-		(
-		  <RBRACKET> comandBlock() < LBRACKET >
-		 {
-		    try {
-	    		Thread.sleep(700);
-	    	    } catch (InterruptedException e) {
-	    		System.err.format("IOException: %s%n", e);
-	    		    }		 
-			sistema.printOutput(salida);
-			return true;
-		})+
+// =================================================================================
+// PRINCIPAL: La que es invocada desde el Interpreter para hacer todo el parsing
+// =================================================================================
+boolean command(Console sistema):
+{	
+	int x,y;
+	salida=new String();		
+}
+{
+	(
+	  //Asegura la ejecución de bloques lógicos individuales
+	  bloque()
+	 {
+	    try {
+	      //Emplea concurrencia para dormir el Thread y que se pueda ver en el dibujo
+    		Thread.sleep(700);
+    	    } catch (InterruptedException e) {
+    		System.err.format("IOException: %s%n", e);
+    		    }		 
+		sistema.printOutput(salida);
+		return true;
+	})+
+	| <EOF> {return false;} 
+}
 
-    	| <EOF> {return false;} 
-	}
-
-	void put() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>    "," f=num() {
-		  
-		  System.out.println(this.chipshere);
-		  System.out.println(f);
-		  world.putChips(f); salida = "Command:  Put Chips";
+void put() :
+{
+	int f=1;	
+}
+{
+	( <CHIPS>    "," f=num() {
+	  
+	  System.out.println(this.chipshere);
+	  System.out.println(f);
+	  world.putChips(f); salida = "Command:  Put Chips";
 
 
-		  })
-		|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+	  })
+	|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
 
-	}
+}
 
-	void get() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
-		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+void get() :
+{
+	int f=1;	
+}
+{
+	( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
+	|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
 
-	}
+}
 
-	/**
-	 * Unsigned decimal number
-	 * @return the corresponding value of the string
-	 * @error  corresponding value is too large
-	 */
-
-	int num() throws Error:
+int num() throws Error:
 	{	
 		int total=1;
 	}
@@ -236,23 +221,34 @@ TOKEN :
 		}
 	}
 
-//Aqui se verifican los diferentes bloques de comandos existentes (condicionales, funciones, loops...)
-void comandBlock() :
+//TODO
+// =================================================================================
+// Verificaciones de parsing
+// =================================================================================
+
+//Verificación de bloques existentes (condicionales, funciones, loops...)
+String bloque() :
+{}
+{
+  	// Mediante recursividad, revisa que los paréntesis estén siempre anidados
+	< LBRACKET >
+	(	  bloque()|commandprotocol(true)|conditionalprotocol()|funcion()
+	)*
+	< RBRACKET >
 	{
+	  return (String)bloque();
 	}
-	{
-		commandprotocol(true)|conditionalprotocol()|funcion()
-	}
+}
 
-
-
-//Aqui se establece la estructura de un condicional, hasta el momento solo funciona con comandos
+//Estructura de un condicional, hasta el momento solo funciona con comandos
 void conditionalprotocol():
-	{
-	}
-	{
-	  <IF> <RBRACKET> condition()<LBRACKET> <RBRACKET>commandprotocol(this.boolexecuter)<LBRACKET> <RBRACKET>commandprotocol(!this.boolexecuter) <LBRACKET>
-	}
+{}
+{
+  <IF>
+  <LBRACKET> condition() <RBRACKET>
+  <LBRACKET>commandprotocol(this.boolexecuter)<RBRACKET>
+  <LBRACKET>commandprotocol(!this.boolexecuter) <RBRACKET>
+}
 	
 //Esta es una condicion que se usa para el condicional 
 void condition():
@@ -269,7 +265,7 @@ void condition():
     )
     |
     (
-        <NOT> <RBRACKET> (
+        <NOT> <LBRACKET> (
             facing(true)
             | zero(true)
             | canput(true)
@@ -277,7 +273,7 @@ void condition():
             | canmove(true)
             | blocked(true)
         )
-        <LBRACKET>
+        <RBRACKET>
     )
 }
 
@@ -1102,12 +1098,30 @@ void funcion():
 	{
 	  String nombreFun;
 	  String parametro;
+	  String block;
+	  ArrayList<String> parametros = new ArrayList<>();
+	  ArrayList<String> bloques = new ArrayList<>();
 	}
 	{
 	  < DEFUN > nombreFun = nombreFuncion()
-	  < RBRACKET >
-	  (parametro = parametroFuncion())*
 	  < LBRACKET >
-	  (< RBRACKET > comandBlock() < LBRACKET >)*
+	  (parametro = parametroFuncion()
+	  {
+	    //Agregar cada parámetro de la función a una lista
+	    parametros.add(parametro);
+	    //Agregar cada parámetro a la lista de variables auxiliares
+	    variablesAuxiliares.add(parametro);
+	  }
+	  )*
+	  < RBRACKET >
+	  {
+	    //Añadir la lista final al mapa de { procedimientos:[parametros] }
+	    procParams.put(nombreFun, parametros);
+	  }	    block = bloque()
+	    {
+	      bloques.add(block);
+	      System.out.println(procParams);
+	      System.out.println(procBloques);
+	    }
 	}
 	

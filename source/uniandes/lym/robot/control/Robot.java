@@ -13,7 +13,10 @@ import java.util.LinkedList;
 @SuppressWarnings("serial")
 public class Robot implements RobotConstants {
         public boolean boolexecuter = true;
-        Map<String, Integer> variableValues = new HashMap<>();
+        public Map<String, Integer> variableValues = new HashMap<>();
+        public ArrayList<String> variablesAuxiliares = new ArrayList<>();
+        public Map<String, ArrayList<String>> procParams = new HashMap<>();
+        public Map<String, ArrayList<String>> procBloques = new HashMap<>();
         public ArrayList<String > strct_tokens = new ArrayList <String>();
         int chipshere;
 
@@ -25,25 +28,26 @@ public class Robot implements RobotConstants {
 
         String salida=new String();
 
-//boolean command(uniandes.lym.robot.view.Console sistema) :
-  final public         boolean command(Console sistema) throws ParseException {int x,y;
-                salida=new String();
+// =================================================================================
+// PRINCIPAL: La que es invocada desde el Interpreter para hacer todo el parsing
+// =================================================================================
+  final public boolean command(Console sistema) throws ParseException {int x,y;
+        salida=new String();
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case RBRACKET:{
+    case LBRACKET:{
       label_1:
       while (true) {
-        jj_consume_token(RBRACKET);
-        comandBlock();
-        jj_consume_token(LBRACKET);
+        bloque();
 try {
-                        Thread.sleep(700);
-                    } catch (InterruptedException e) {
-                        System.err.format("IOException: %s%n", e);
-                            }
-                        sistema.printOutput(salida);
-                        {if ("" != null) return true;}
+              //Emplea concurrencia para dormir el Thread y que se pueda ver en el dibujo
+                Thread.sleep(700);
+            } catch (InterruptedException e) {
+                System.err.format("IOException: %s%n", e);
+                    }
+                sistema.printOutput(salida);
+                {if ("" != null) return true;}
         switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-        case RBRACKET:{
+        case LBRACKET:{
           ;
           break;
           }
@@ -71,16 +75,16 @@ try {
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case CHIPS:{
       jj_consume_token(CHIPS);
-      jj_consume_token(57);
+      jj_consume_token(55);
       f = num();
 System.out.println(this.chipshere);
-                  System.out.println(f);
-                  world.putChips(f); salida = "Command:  Put Chips";
+          System.out.println(f);
+          world.putChips(f); salida = "Command:  Put Chips";
       break;
       }
     case BALLOONS:{
       jj_consume_token(BALLOONS);
-      jj_consume_token(57);
+      jj_consume_token(55);
       f = num();
 world.putBalloons(f); salida = "Command:  Put Balloons";
       break;
@@ -96,14 +100,14 @@ world.putBalloons(f); salida = "Command:  Put Balloons";
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case CHIPS:{
       jj_consume_token(CHIPS);
-      jj_consume_token(57);
+      jj_consume_token(55);
       f = num();
 world.pickChips(f);salida = "Command:  Pick chips";
       break;
       }
     case BALLOONS:{
       jj_consume_token(BALLOONS);
-      jj_consume_token(57);
+      jj_consume_token(55);
       f = num();
 world.grabBalloons(f);salida="Command:  Pick balloons";
       break;
@@ -115,13 +119,7 @@ world.grabBalloons(f);salida="Command:  Pick balloons";
     }
 }
 
-/**
-	 * Unsigned decimal number
-	 * @return the corresponding value of the string
-	 * @error  corresponding value is too large
-	 */
-  final public 
-        int num() throws ParseException, Error {int total=1;
+  final public int num() throws ParseException, Error {int total=1;
     jj_consume_token(NUM);
 try
                         {
@@ -135,51 +133,90 @@ try
     throw new Error("Missing return statement in function");
 }
 
-//Aqui se verifican los diferentes bloques de comandos existentes (condicionales, funciones, loops...)
-  final public void comandBlock() throws ParseException {
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case PUT:
-    case PICK:
-    case HOP:
-    case MOVE:
-    case EQUAL:
-    case DEFVAR:
-    case TURN:
-    case FACE:
-    case MOVEDIR:
-    case RUNDIRS:
-    case MOVEFACE:
-    case NULL:{
-      commandprotocol(true);
-      break;
+//TODO
+// =================================================================================
+// Verificaciones de parsing
+// =================================================================================
+
+//Verificación de bloques existentes (condicionales, funciones, loops...)
+  final public String bloque() throws ParseException {
+    jj_consume_token(LBRACKET);
+    label_2:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case MOVE:
+      case EQUAL:
+      case DEFVAR:
+      case TURN:
+      case FACE:
+      case MOVEDIR:
+      case RUNDIRS:
+      case MOVEFACE:
+      case NULL:
+      case PUT:
+      case PICK:
+      case HOP:
+      case DEFUN:
+      case LBRACKET:
+      case IF:{
+        ;
+        break;
+        }
+      default:
+        jj_la1[4] = jj_gen;
+        break label_2;
       }
-    case IF:{
-      conditionalprotocol();
-      break;
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case LBRACKET:{
+        bloque();
+        break;
+        }
+      case MOVE:
+      case EQUAL:
+      case DEFVAR:
+      case TURN:
+      case FACE:
+      case MOVEDIR:
+      case RUNDIRS:
+      case MOVEFACE:
+      case NULL:
+      case PUT:
+      case PICK:
+      case HOP:{
+        commandprotocol(true);
+        break;
+        }
+      case IF:{
+        conditionalprotocol();
+        break;
+        }
+      case DEFUN:{
+        funcion();
+        break;
+        }
+      default:
+        jj_la1[5] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
       }
-    case DEFUN:{
-      funcion();
-      break;
-      }
-    default:
-      jj_la1[4] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
     }
+    jj_consume_token(RBRACKET);
+{if ("" != null) return (String)bloque();}
+    throw new Error("Missing return statement in function");
 }
 
-//Aqui se establece la estructura de un condicional, hasta el momento solo funciona con comandos
+//Estructura de un condicional, hasta el momento solo funciona con comandos
   final public void conditionalprotocol() throws ParseException {
     jj_consume_token(IF);
-    jj_consume_token(RBRACKET);
+    jj_consume_token(LBRACKET);
     condition();
-    jj_consume_token(LBRACKET);
     jj_consume_token(RBRACKET);
+    jj_consume_token(LBRACKET);
     commandprotocol(this.boolexecuter);
-    jj_consume_token(LBRACKET);
     jj_consume_token(RBRACKET);
-    commandprotocol(!this.boolexecuter);
     jj_consume_token(LBRACKET);
+    commandprotocol(!this.boolexecuter);
+    jj_consume_token(RBRACKET);
 }
 
 //Esta es una condicion que se usa para el condicional 
@@ -217,7 +254,7 @@ try
         break;
         }
       default:
-        jj_la1[5] = jj_gen;
+        jj_la1[6] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -225,7 +262,7 @@ try
       }
     case NOT:{
       jj_consume_token(NOT);
-      jj_consume_token(RBRACKET);
+      jj_consume_token(LBRACKET);
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case FACING:{
         facing(true);
@@ -252,15 +289,15 @@ try
         break;
         }
       default:
-        jj_la1[6] = jj_gen;
+        jj_la1[7] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      jj_consume_token(LBRACKET);
+      jj_consume_token(RBRACKET);
       break;
       }
     default:
-      jj_la1[7] = jj_gen;
+      jj_la1[8] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -322,7 +359,7 @@ this.boolexecuter= world.getMyBalloons()-f >= 0;
       break;
       }
     default:
-      jj_la1[8] = jj_gen;
+      jj_la1[9] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -350,7 +387,7 @@ this.boolexecuter= world.countBalloons()-f >= 0;
       break;
       }
     default:
-      jj_la1[9] = jj_gen;
+      jj_la1[10] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -644,7 +681,7 @@ if(execute==true) {
       }
     case RUNDIRS:{
       jj_consume_token(RUNDIRS);
-      label_2:
+      label_3:
       while (true) {
         direction = direction();
 if(execute==true) {
@@ -705,8 +742,8 @@ if(execute==true) {
           break;
           }
         default:
-          jj_la1[10] = jj_gen;
-          break label_2;
+          jj_la1[11] = jj_gen;
+          break label_3;
         }
       }
       break;
@@ -722,7 +759,7 @@ if(execute==true) {
       break;
       }
     default:
-      jj_la1[11] = jj_gen;
+      jj_la1[12] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -784,7 +821,7 @@ try
       break;
       }
     default:
-      jj_la1[12] = jj_gen;
+      jj_la1[13] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -846,7 +883,7 @@ try
       break;
       }
     default:
-      jj_la1[13] = jj_gen;
+      jj_la1[14] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -873,7 +910,7 @@ if(execute==true) {
       break;
       }
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[15] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -896,7 +933,7 @@ if(execute==true) {
       break;
       }
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[16] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1030,7 +1067,7 @@ try
       break;
       }
     default:
-      jj_la1[16] = jj_gen;
+      jj_la1[17] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1092,7 +1129,7 @@ try
       break;
       }
     default:
-      jj_la1[17] = jj_gen;
+      jj_la1[18] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1117,7 +1154,7 @@ try
 /* Los parámetros de una función son cadenas alfabéticas */
   final public String parametroFuncion() throws ParseException, Error {String parametro = "";
     jj_consume_token(NAME);
-    label_3:
+    label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case NUMS:{
@@ -1125,8 +1162,8 @@ try
         break;
         }
       default:
-        jj_la1[18] = jj_gen;
-        break label_3;
+        jj_la1[19] = jj_gen;
+        break label_4;
       }
       jj_consume_token(NUMS);
     }
@@ -1145,10 +1182,13 @@ try
 /* Estructura de función es (defun nombre (params) (c1)(c2)...(cn))*/
   final public void funcion() throws ParseException {String nombreFun;
           String parametro;
+          String block;
+          ArrayList<String> parametros = new ArrayList<>();
+          ArrayList<String> bloques = new ArrayList<>();
     jj_consume_token(DEFUN);
     nombreFun = nombreFuncion();
-    jj_consume_token(RBRACKET);
-    label_4:
+    jj_consume_token(LBRACKET);
+    label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case NAME:{
@@ -1156,27 +1196,22 @@ try
         break;
         }
       default:
-        jj_la1[19] = jj_gen;
-        break label_4;
-      }
-      parametro = parametroFuncion();
-    }
-    jj_consume_token(LBRACKET);
-    label_5:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case RBRACKET:{
-        ;
-        break;
-        }
-      default:
         jj_la1[20] = jj_gen;
         break label_5;
       }
-      jj_consume_token(RBRACKET);
-      comandBlock();
-      jj_consume_token(LBRACKET);
+      parametro = parametroFuncion();
+//Agregar cada parámetro de la función a una lista
+            parametros.add(parametro);
+            //Agregar cada parámetro a la lista de variables auxiliares
+            variablesAuxiliares.add(parametro);
     }
+    jj_consume_token(RBRACKET);
+//Añadir la lista final al mapa de { procedimientos:[parametros] }
+            procParams.put(nombreFun, parametros);
+    block = bloque();
+bloques.add(block);
+              System.out.println(procParams);
+              System.out.println(procBloques);
 }
 
   /** Generated Token Manager. */
@@ -1196,10 +1231,10 @@ try
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x1,0x30000,0x30000,0x80000980,0x0,0x0,0x0,0x30000,0x30000,0x7040,0x80000980,0x9040,0x780000,0x30000,0x30000,0x3f800000,0x7040,0x0,0x0,0x0,};
+	   jj_la1_0 = new int[] {0x0,0x1,0xc00,0xc00,0xfc000000,0xfc000000,0x0,0x0,0x0,0xc00,0xc00,0x1e0,0xfc000000,0x260,0x3c000,0xc00,0xc00,0x1fc0000,0x1e0,0x0,0x0,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x200,0x200,0x0,0x0,0x9ff,0x3f000,0x3f000,0x7f000,0x0,0x0,0x0,0xff,0x0,0x0,0x0,0x0,0x280000,0x0,0x200000,0x80000,0x200,};
+	   jj_la1_1 = new int[] {0x100,0x100,0x0,0x0,0x37f,0x37f,0xfc00,0xfc00,0x1fc00,0x0,0x0,0x0,0x3f,0x0,0x0,0x0,0x0,0xa0000,0x0,0x80000,0x20000,};
 	}
 
   /** Constructor with InputStream. */
@@ -1324,7 +1359,7 @@ try
   /** Generate ParseException. */
   public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[58];
+	 boolean[] la1tokens = new boolean[56];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
@@ -1341,7 +1376,7 @@ try
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 58; i++) {
+	 for (int i = 0; i < 56; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;
