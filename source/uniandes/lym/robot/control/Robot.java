@@ -13,7 +13,7 @@ import java.util.LinkedList;
 @SuppressWarnings("serial")
 public class Robot implements RobotConstants {
         public boolean boolexecuter = true;
-        public Map<String, Integer> variableValues = new HashMap<>();
+        public Map<String, Object> variableValues = new HashMap<>();
         public ArrayList<String> variablesAuxiliares = new ArrayList<>();
         public Map<String, ArrayList<String>> procParams = new HashMap<>();
         public Map<String, ArrayList<String>> procBloques = new HashMap<>();
@@ -28,16 +28,18 @@ public class Robot implements RobotConstants {
 
         String salida=new String();
 
+// TODO
 // =================================================================================
 // PRINCIPAL: La que es invocada desde el Interpreter para hacer todo el parsing
 // =================================================================================
-  final public boolean command(Console sistema) throws ParseException {int x,y;
-        salida=new String();
+  final public boolean command(Console sistema) throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case LBRACKET:{
       label_1:
       while (true) {
-        bloque();
+        jj_consume_token(LBRACKET);
+        commandBlock();
+        jj_consume_token(RBRACKET);
 try {
               //Emplea concurrencia para dormir el Thread y que se pueda ver en el dibujo
                 Thread.sleep(700);
@@ -71,22 +73,167 @@ try {
     throw new Error("Missing return statement in function");
 }
 
-  final public void put() throws ParseException {int f=1;
+// TODO
+// =================================================================================
+// LECTURA: Invocados para lanzar errores de lectura del parser
+// =================================================================================
+
+// Identifica números sobre el programa
+  final public int num() throws ParseException, Error {int total=1;
+    jj_consume_token(NUM);
+try
+                {
+                        total = Integer.parseInt(token.image);
+                }
+                catch (NumberFormatException ee)
+                {
+                        {if (true) throw new Error("Number out of bounds: "+token.image+" !!");}
+                }
+                {if ("" != null) return total;}
+    throw new Error("Missing return statement in function");
+}
+
+// Identifica variables/nombres sobre el programa
+  final public String var() throws ParseException, Error {String name= "";
+    jj_consume_token(NAME);
+try
+                {
+                        name += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error detected while reading variable !!");}
+                }
+                {if ("" != null) return name;}
+    throw new Error("Missing return statement in function");
+}
+
+// Identifica números constantes y/o valores numéricos de variables
+  final public int numvar() throws ParseException, Error {int value= 0;
+        String name;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case CHIPS:{
-      jj_consume_token(CHIPS);
-      jj_consume_token(55);
-      f = num();
-System.out.println(this.chipshere);
-          System.out.println(f);
-          world.putChips(f); salida = "Command:  Put Chips";
+    case NUMS:{
+      jj_consume_token(NUMS);
+try
+                {
+                        value = Integer.parseInt(token.image);
+                }
+                catch (NumberFormatException ee)
+                {
+                        {if (true) throw new Error("Number out of bounds: "+token.image+" !!");}
+                }
+                {if ("" != null) return value;}
       break;
       }
-    case BALLOONS:{
-      jj_consume_token(BALLOONS);
-      jj_consume_token(55);
-      f = num();
-world.putBalloons(f); salida = "Command:  Put Balloons";
+    case NAME:{
+      jj_consume_token(NAME);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  (int) variableValues.get(name);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("The variable was not registered in the VAR protocol");}
+                }
+                {if ("" != null) return value;}
+      break;
+      }
+    case DIM:{
+      jj_consume_token(DIM);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  world.getN();
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("The variable was not registered in the VAR protocol");}
+                }
+                {if ("" != null) return value;}
+      break;
+      }
+    case MYXPOS:{
+      jj_consume_token(MYXPOS);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  (int) world.getPosition().getX();
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("The variable was not registered in the VAR protocol");}
+                }
+                {if ("" != null) return value;}
+      break;
+      }
+    case MYYPOS:{
+      jj_consume_token(MYYPOS);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  (int) world.getPosition().getY();
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("The variable was not registered in the VAR protocol");}
+                }
+                {if ("" != null) return value;}
+      break;
+      }
+    case MYCHIPS:{
+      jj_consume_token(MYCHIPS);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  (int) world.getMyChips();
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("The variable was not registered in the VAR protocol");}
+                }
+                {if ("" != null) return value;}
+      break;
+      }
+    case MYBALLOONS:{
+      jj_consume_token(MYBALLOONS);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  (int) world.getMyBalloons();
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("The variable was not registered in the VAR protocol");}
+                }
+                {if ("" != null) return value;}
+      break;
+      }
+    case BALLOONSHERE:{
+      jj_consume_token(BALLOONSHERE);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  world.countBalloons();
+                }
+                catch (Exception e)
+                {
+                }
+                {if ("" != null) return value;}
+      break;
+      }
+    case CHIPSHERE:{
+      jj_consume_token(CHIPSHERE);
+try
+                {
+                        name = String.valueOf(token.image);
+                        value =  this.chipshere;
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("The variable was not registered in the VAR protocol");}
+                }
+                {if ("" != null) return value;}
       break;
       }
     default:
@@ -94,22 +241,62 @@ world.putBalloons(f); salida = "Command:  Put Balloons";
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
 }
 
-  final public void get() throws ParseException {int f=1;
+// Identifica orientaciones (:north, :south, :east, :west)
+  final public String orientation() throws ParseException, Error {String direction= "";
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case CHIPS:{
-      jj_consume_token(CHIPS);
-      jj_consume_token(55);
-      f = num();
-world.pickChips(f);salida = "Command:  Pick chips";
+    case NORTH:{
+      jj_consume_token(NORTH);
+try
+                {
+                        direction += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error with the direction");}
+                }
+                {if ("" != null) return direction;}
       break;
       }
-    case BALLOONS:{
-      jj_consume_token(BALLOONS);
-      jj_consume_token(55);
-      f = num();
-world.grabBalloons(f);salida="Command:  Pick balloons";
+    case SOUTH:{
+      jj_consume_token(SOUTH);
+try
+                {
+                        direction += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error with the direction");}
+                }
+                {if ("" != null) return direction;}
+      break;
+      }
+    case WEST:{
+      jj_consume_token(WEST);
+try
+                {
+                        direction += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error with the direction");}
+                }
+                {if ("" != null) return direction;}
+      break;
+      }
+    case EAST:{
+      jj_consume_token(EAST);
+try
+                {
+                        direction += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error with the direction");}
+                }
+                {if ("" != null) return direction;}
       break;
       }
     default:
@@ -117,183 +304,217 @@ world.grabBalloons(f);salida="Command:  Pick balloons";
       jj_consume_token(-1);
       throw new ParseException();
     }
-}
-
-  final public int num() throws ParseException, Error {int total=1;
-    jj_consume_token(NUM);
-try
-                        {
-                                total = Integer.parseInt(token.image);
-                        }
-                        catch (NumberFormatException ee)
-                        {
-                                {if (true) throw new Error("Number out of bounds: "+token.image+" !!");}
-                        }
-                        {if ("" != null) return total;}
     throw new Error("Missing return statement in function");
 }
 
-//TODO
-// =================================================================================
-// Verificaciones de parsing
-// =================================================================================
+// Identifica direcciones (:front, :right, :left, :back)
+  final public String direction() throws ParseException, Error {String dir= "";
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case RIGHT:{
+      jj_consume_token(RIGHT);
+try
+                {
+                        dir += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error detected while reading the direction !!");}
+                }
+                {if ("" != null) return dir;}
+      break;
+      }
+    case LEFT:{
+      jj_consume_token(LEFT);
+try
+                {
+                        dir += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error detected while reading the direction !!");}
+                }
+                {if ("" != null) return dir;}
+      break;
+      }
+    case FRONT:{
+      jj_consume_token(FRONT);
+try
+                {
+                        dir += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error detected while reading the direction !!");}
+                }
+                {if ("" != null) return dir;}
+      break;
+      }
+    case BACK:{
+      jj_consume_token(BACK);
+try
+                {
+                        dir += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error detected while reading the direction !!");}
+                }
+                {if ("" != null) return dir;}
+      break;
+      }
+    default:
+      jj_la1[4] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+}
 
-//Verificación de bloques existentes (condicionales, funciones, loops...)
-  final public String bloque() throws ParseException {
-    jj_consume_token(LBRACKET);
+// Identifica direcciones de giro (:left, :right, :around)
+  final public String turn() throws ParseException, Error {String direction= "";
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case RIGHT:{
+      jj_consume_token(RIGHT);
+try
+                {
+                        direction += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error with the direction");}
+                }
+                {if ("" != null) return direction;}
+      break;
+      }
+    case LEFT:{
+      jj_consume_token(LEFT);
+try
+                {
+                        direction += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error with the direction");}
+                }
+                {if ("" != null) return direction;}
+      break;
+      }
+    case AROUND:{
+      jj_consume_token(AROUND);
+try
+                {
+                        direction += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error with the direction");}
+                }
+                {if ("" != null) return direction;}
+      break;
+      }
+    default:
+      jj_la1[5] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+}
+
+/* El nombre de una función es una cadena alfanumérica */
+  final public String nombreFuncion() throws ParseException, Error {String nombre = "";
+    jj_consume_token(NAME);
+try
+                        {
+                                nombre += String.valueOf(token.image);
+                        }
+                        catch (Exception e)
+                        {
+                                {if (true) throw new Error("Error detected while reading variable !!");}
+                        }
+                        {if ("" != null) return nombre;}
+    throw new Error("Missing return statement in function");
+}
+
+/* Los parámetros de una función son cadenas alfabéticas */
+  final public String parametroFuncion() throws ParseException, Error {String parametro = "";
+    jj_consume_token(NAME);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case MOVE:
-      case EQUAL:
-      case DEFVAR:
-      case TURN:
-      case FACE:
-      case MOVEDIR:
-      case RUNDIRS:
-      case MOVEFACE:
-      case NULL:
-      case PUT:
-      case PICK:
-      case HOP:
-      case DEFUN:
-      case LBRACKET:
-      case IF:{
+      case NUMS:{
         ;
         break;
         }
       default:
-        jj_la1[4] = jj_gen;
+        jj_la1[6] = jj_gen;
         break label_2;
       }
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case LBRACKET:{
-        bloque();
-        break;
-        }
-      case MOVE:
-      case EQUAL:
-      case DEFVAR:
-      case TURN:
-      case FACE:
-      case MOVEDIR:
-      case RUNDIRS:
-      case MOVEFACE:
-      case NULL:
-      case PUT:
-      case PICK:
-      case HOP:{
-        commandprotocol(true);
-        break;
-        }
-      case IF:{
-        conditionalprotocol();
-        break;
-        }
-      case DEFUN:{
-        funcion();
-        break;
-        }
-      default:
-        jj_la1[5] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
+      jj_consume_token(NUMS);
     }
-    jj_consume_token(RBRACKET);
-{if ("" != null) return (String)bloque();}
+try
+                {
+                        parametro += String.valueOf(token.image);
+                }
+                catch (Exception e)
+                {
+                        {if (true) throw new Error("Error detected while reading variable !!");}
+                }
+                {if ("" != null) return parametro;}
     throw new Error("Missing return statement in function");
 }
 
-//Estructura de un condicional, hasta el momento solo funciona con comandos
-  final public void conditionalprotocol() throws ParseException {
-    jj_consume_token(IF);
-    jj_consume_token(LBRACKET);
-    condition();
-    jj_consume_token(RBRACKET);
-    jj_consume_token(LBRACKET);
-    commandprotocol(this.boolexecuter);
-    jj_consume_token(RBRACKET);
-    jj_consume_token(LBRACKET);
-    commandprotocol(!this.boolexecuter);
-    jj_consume_token(RBRACKET);
-}
+// TODO
+// =================================================================================
+// OPERACIÓN: Invocados para realizar las operaciones del robot
+// =================================================================================
 
-//Esta es una condicion que se usa para el condicional 
-  final public void condition() throws ParseException {
+// Operación de dejar
+  final public void put(boolean execute) throws ParseException {int f = 1;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case FACING:
-    case BLOCKED:
-    case CANPUT:
-    case CANPICK:
-    case CANMOVE:
-    case ISZERO:{
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case FACING:{
-        facing(false);
-        break;
-        }
-      case ISZERO:{
-        zero(false);
-        break;
-        }
-      case CANPUT:{
-        canput(false);
-        break;
-        }
-      case CANPICK:{
-        canpick(false);
-        break;
-        }
-      case CANMOVE:{
-        canmove(false);
-        break;
-        }
-      case BLOCKED:{
-        blocked(false);
-        break;
-        }
-      default:
-        jj_la1[6] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
+    case CHIPS:{
+      jj_consume_token(CHIPS);
+      f = numvar();
+if(execute==true) {
+        world.putChips(f);
+        salida = "Command: Put Chips";
       }
       break;
       }
-    case NOT:{
-      jj_consume_token(NOT);
-      jj_consume_token(LBRACKET);
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case FACING:{
-        facing(true);
-        break;
-        }
-      case ISZERO:{
-        zero(true);
-        break;
-        }
-      case CANPUT:{
-        canput(true);
-        break;
-        }
-      case CANPICK:{
-        canpick(true);
-        break;
-        }
-      case CANMOVE:{
-        canmove(true);
-        break;
-        }
-      case BLOCKED:{
-        blocked(true);
-        break;
-        }
-      default:
-        jj_la1[7] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
+    case BALLOONS:{
+      jj_consume_token(BALLOONS);
+      f = numvar();
+if(execute==true) {
+        world.putBalloons(f);
+        salida = "Command: Put Balloons";
       }
-      jj_consume_token(RBRACKET);
+      break;
+      }
+    default:
+      jj_la1[7] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+}
+
+// Operación de recoger
+  final public void get(boolean execute) throws ParseException {int f = 1;
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case CHIPS:{
+      jj_consume_token(CHIPS);
+      f = numvar();
+if(execute==true) {
+        world.pickChips(f);
+        salida = "Command: Put Chips";
+      }
+      break;
+      }
+    case BALLOONS:{
+      jj_consume_token(BALLOONS);
+      f = numvar();
+if(execute==true) {
+            world.grabBalloons(f);
+            salida = "Command: Put Balloons";
+      }
       break;
       }
     default:
@@ -303,87 +524,68 @@ try
     }
 }
 
-  final public void facing(boolean not) throws ParseException {String o;
-    int actual;
-    int comp;
-    jj_consume_token(FACING);
-    o = orientation();
-actual = world.getFacing();
-        comp = getNumCardinal(o);
-        if (actual == comp) {
-            this.boolexecuter = true;
-        } else {
-            this.boolexecuter = false;
-        }
-        if (not == true) {
-            this.boolexecuter = !this.boolexecuter;
-        }
-        System.out.println("Valor de boolexecuter: " + this.boolexecuter);
-}
+// TODO
+// =================================================================================
+// VERIFICACIÓN: Invocados para realizar las verificaciones de estructura
+// =================================================================================
 
-  final public void zero(boolean not) throws ParseException {int o;
-    jj_consume_token(ISZERO);
-    o = numvar();
-if (o==0) {
-            this.boolexecuter = true;
-        }else {
-                        this.boolexecuter = false;
-           }
-
-                if (not == true) {
-            this.boolexecuter = !this.boolexecuter;
-        }
-}
-
-  final public void canput(boolean not) throws ParseException {int f=1;
-                boolean can = true;
-    jj_consume_token(CANPUT);
+// Verifican los bloques de comandos existentes (condicionales, funciones, loops...)
+  final public void commandBlock() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case CHIPS:{
-      jj_consume_token(CHIPS);
-      f = numvar();
-Point p = world.getPosition();
-                  if (world.chipExists(new Point(p.x, p.y+f-1))) {
-                        can = false;
-                     }
-                  if (!(world.getN()-p.y >=f)) {
-                        can = false;
-                                 }
-                  this.boolexecuter= can;
+    case MOVE:
+    case EQUAL:
+    case DEFVAR:
+    case TURN:
+    case FACE:
+    case MOVEDIR:
+    case RUNDIRS:
+    case MOVEFACE:
+    case NULL:
+    case PUT:
+    case PICK:
+    case HOP:
+    case LBRACKET:{
+      commandprotocol(true);
       break;
       }
-    case BALLOONS:{
-      jj_consume_token(BALLOONS);
-      f = numvar();
-this.boolexecuter= world.getMyBalloons()-f >= 0;
+    case IF:{
+      conditionalprotocol();
       break;
       }
-    default:
-      jj_la1[9] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-if (not == true) {
-            this.boolexecuter = !this.boolexecuter;
+    case DEFUN:{
+      funcion();
+      break;
+      }
+    case RBRACKET:{
+      label_3:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+        case MOVE:
+        case EQUAL:
+        case DEFVAR:
+        case TURN:
+        case FACE:
+        case MOVEDIR:
+        case RUNDIRS:
+        case MOVEFACE:
+        case NULL:
+        case PUT:
+        case PICK:
+        case HOP:
+        case LBRACKET:{
+          ;
+          break;
+          }
+        default:
+          jj_la1[9] = jj_gen;
+          break label_3;
         }
-        System.out.println("Valor de boolexecuter: " + this.boolexecuter);
-}
-
-  final public void canpick(boolean not) throws ParseException {int f=1;
-    jj_consume_token(CANPICK);
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case CHIPS:{
-      jj_consume_token(CHIPS);
-      f = numvar();
-Point p = world.getPosition();
-                  if (world.chipExists(p) && f == 1) { this.boolexecuter= true; }
-                  else { this.boolexecuter= false; }
-      break;
+        commandprotocol(true);
+        jj_consume_token(LBRACKET);
+        commandBlock();
+        jj_consume_token(RBRACKET);
       }
-    case BALLOONS:{
-      jj_consume_token(BALLOONS);
-      f = numvar();
-this.boolexecuter= world.countBalloons()-f >= 0;
+      jj_consume_token(RBRACKET);
       break;
       }
     default:
@@ -391,117 +593,6 @@ this.boolexecuter= world.countBalloons()-f >= 0;
       jj_consume_token(-1);
       throw new ParseException();
     }
-if (not == true) {
-            this.boolexecuter = !this.boolexecuter;
-        }
-        System.out.println("Valor de boolexecuter: " + this.boolexecuter);
-}
-
-  final public void canmove(boolean not) throws ParseException {boolean can = true;
-          String o;
-          int wanted;
-          Point actual;
-          int x, y;
-
-          o = null;
-          wanted = 0;
-          x = 0;
-          y = 0;
-    jj_consume_token(CANMOVE);
-    o = orientation();
-actual = world.getPosition();
-                        Point pos = new Point(1, 1);
-
-                        wanted = getNumCardinal(o);
-                        x = (int)actual.getX();
-                        y = (int)actual.getY();
-                        System.out.println("Actual: "+actual);
-                        System.out.println("pos: "+pos);
-                        if (wanted == 0) {
-                          pos.setLocation(x,y-1);}
-                        else if (wanted == 1) {
-                          pos.setLocation(x,y+1);}
-                        else if (wanted == 2) {
-                          pos.setLocation(x+1,y);}
-                        else if (wanted == 3) {
-                          pos.setLocation(x-1,y);}
-                System.out.println("Trueval canJumpInDir: "+x);
-                System.out.println("Trueval canJumpInDir: "+y);
-                System.out.println("Trueval canJumpInDir: "+world.getN());
-                System.out.println("Trueval canJumpInDir: "+pos);
-                 if (pos.x >world.getN() || pos.y >world.getN() || pos.x<1 || pos.y<1) {
-                this.boolexecuter = false;
-
-
-                 }else {
-                                this.boolexecuter = !world.isBlocked(pos);
-                        }
-
-                    if (not == true) {
-                this.boolexecuter = !this.boolexecuter;
-                 }
-
-                        System.out.println("Trueval canJumpInDir: "+this.boolexecuter);
-}
-
-  final public void blocked(boolean not) throws ParseException {boolean can = true;
-          String o;
-          int wanted;
-          Point actual;
-          int x, y;
-
-          o = null;
-          wanted = 0;
-          x = 0;
-          y = 0;
-    jj_consume_token(BLOCKED);
-actual = world.getPosition();
-                        Point pos = new Point(1, 1);
-
-                        wanted = world.getFacing();
-                        x = (int)actual.getX();
-                        y = (int)actual.getY();
-                        System.out.println("Actual: "+actual);
-                        System.out.println("pos: "+pos);
-                        if (wanted == 0) {
-                          pos.setLocation(x,y-1);}
-                        else if (wanted == 1) {
-                          pos.setLocation(x,y+1);}
-                        else if (wanted == 2) {
-                          pos.setLocation(x+1,y);}
-                        else if (wanted == 3) {
-                          pos.setLocation(x-1,y);}
-                System.out.println("Trueval canJumpInDir: "+x);
-                System.out.println("Trueval canJumpInDir: "+y);
-                System.out.println("Trueval canJumpInDir: "+world.getN());
-                System.out.println("Trueval canJumpInDir: "+pos);
-                 if (pos.x >world.getN() || pos.y >world.getN() || pos.x<1 || pos.y<1) {
-                this.boolexecuter = true;
-
-
-                 }else {
-                                this.boolexecuter = world.isBlocked(pos);
-                        }
-
-                    if (not == true) {
-                this.boolexecuter = !this.boolexecuter;
-                 }
-
-                        System.out.println("Trueval canJumpInDir: "+this.boolexecuter);
-}
-
-  final public int getNumCardinal(String o) throws ParseException {int numCardinal;
-          numCardinal=0;
-if (o.equals(":north")) {
-                  numCardinal = 0; }
-                else if (o.equals(":south")) {
-                  numCardinal = 1; }
-                else if (o.equals(":east")) {
-                  numCardinal = 2; }
-                else if (o.equals(":west")) {
-                  numCardinal = 3; }
-                {if ("" != null) return numCardinal;}
-    throw new Error("Missing return statement in function");
 }
 
   final public void commandprotocol(boolean execute) throws ParseException {int x,y;
@@ -511,6 +602,39 @@ if (o.equals(":north")) {
         salida=new String();
         y = world.getFacing();
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case LBRACKET:{
+      jj_consume_token(LBRACKET);
+      label_4:
+      while (true) {
+        commandBlock();
+        switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+        case MOVE:
+        case EQUAL:
+        case DEFVAR:
+        case TURN:
+        case FACE:
+        case MOVEDIR:
+        case RUNDIRS:
+        case MOVEFACE:
+        case NULL:
+        case PUT:
+        case PICK:
+        case HOP:
+        case DEFUN:
+        case LBRACKET:
+        case RBRACKET:
+        case IF:{
+          ;
+          break;
+          }
+        default:
+          jj_la1[11] = jj_gen;
+          break label_4;
+        }
+      }
+      jj_consume_token(RBRACKET);
+      break;
+      }
     case DEFVAR:{
       jj_consume_token(DEFVAR);
       namevar = var();
@@ -681,7 +805,7 @@ if(execute==true) {
       }
     case RUNDIRS:{
       jj_consume_token(RUNDIRS);
-      label_3:
+      label_5:
       while (true) {
         direction = direction();
 if(execute==true) {
@@ -742,82 +866,20 @@ if(execute==true) {
           break;
           }
         default:
-          jj_la1[11] = jj_gen;
-          break label_3;
+          jj_la1[12] = jj_gen;
+          break label_5;
         }
       }
       break;
       }
     case PUT:{
       jj_consume_token(PUT);
-      putt(execute);
+      put(execute);
       break;
       }
     case PICK:{
       jj_consume_token(PICK);
-      gett(execute);
-      break;
-      }
-    default:
-      jj_la1[12] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-}
-
-  final public String var() throws ParseException, Error {String name= "";
-    jj_consume_token(NAME);
-try
-                        {
-                                name += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error detected while reading variable !!");}
-                        }
-                        {if ("" != null) return name;}
-    throw new Error("Missing return statement in function");
-}
-
-  final public String turn() throws ParseException, Error {String direction= "";
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case RIGHT:{
-      jj_consume_token(RIGHT);
-try
-                        {
-                                direction += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error with the direction");}
-                        }
-                        {if ("" != null) return direction;}
-      break;
-      }
-    case LEFT:{
-      jj_consume_token(LEFT);
-try
-                        {
-                                direction += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error with the direction");}
-                        }
-                        {if ("" != null) return direction;}
-      break;
-      }
-    case AROUND:{
-      jj_consume_token(AROUND);
-try
-                        {
-                                direction += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error with the direction");}
-                        }
-                        {if ("" != null) return direction;}
+      get(execute);
       break;
       }
     default:
@@ -825,111 +887,97 @@ try
       jj_consume_token(-1);
       throw new ParseException();
     }
-    throw new Error("Missing return statement in function");
 }
 
-  final public String orientation() throws ParseException, Error {String direction= "";
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case NORTH:{
-      jj_consume_token(NORTH);
-try
-                        {
-                                direction += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error with the direction");}
-                        }
-                        {if ("" != null) return direction;}
-      break;
-      }
-    case SOUTH:{
-      jj_consume_token(SOUTH);
-try
-                        {
-                                direction += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error with the direction");}
-                        }
-                        {if ("" != null) return direction;}
-      break;
-      }
-    case WEST:{
-      jj_consume_token(WEST);
-try
-                        {
-                                direction += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error with the direction");}
-                        }
-                        {if ("" != null) return direction;}
-      break;
-      }
-    case EAST:{
-      jj_consume_token(EAST);
-try
-                        {
-                                direction += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error with the direction");}
-                        }
-                        {if ("" != null) return direction;}
-      break;
-      }
-    default:
-      jj_la1[14] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-    throw new Error("Missing return statement in function");
+//Aqui se establece la estructura de un condicional, hasta el momento solo funciona con comandos
+  final public void conditionalprotocol() throws ParseException {
+    jj_consume_token(IF);
+    jj_consume_token(LBRACKET);
+    condition();
+    jj_consume_token(RBRACKET);
+    jj_consume_token(LBRACKET);
+    commandprotocol(this.boolexecuter);
+    jj_consume_token(RBRACKET);
+    jj_consume_token(LBRACKET);
+    commandprotocol(!this.boolexecuter);
+    jj_consume_token(RBRACKET);
 }
 
-  final public void putt(boolean execute) throws ParseException {int f = 1;
+// Condición que interpreta un condicional y un loop
+  final public void condition() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case CHIPS:{
-      jj_consume_token(CHIPS);
-      f = numvar();
-if(execute==true) {
-                        world.putChips(f); salida = "Command: Put Chips";
-                        this.chipshere+=f;
-                }
+    case FACING:
+    case BLOCKED:
+    case CANPUT:
+    case CANPICK:
+    case CANMOVE:
+    case ISZERO:{
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case FACING:{
+        facing(false);
+        break;
+        }
+      case ISZERO:{
+        zero(false);
+        break;
+        }
+      case CANPUT:{
+        canput(false);
+        break;
+        }
+      case CANPICK:{
+        canpick(false);
+        break;
+        }
+      case CANMOVE:{
+        canmove(false);
+        break;
+        }
+      case BLOCKED:{
+        blocked(false);
+        break;
+        }
+      default:
+        jj_la1[14] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
       break;
       }
-    case BALLOONS:{
-      jj_consume_token(BALLOONS);
-      f = numvar();
-if(execute==true) {
-                        world.putBalloons(f); salida = "Command: Put Balloons";
-                }
-      break;
+    case NOT:{
+      jj_consume_token(NOT);
+      jj_consume_token(RBRACKET);
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case FACING:{
+        facing(true);
+        break;
+        }
+      case ISZERO:{
+        zero(true);
+        break;
+        }
+      case CANPUT:{
+        canput(true);
+        break;
+        }
+      case CANPICK:{
+        canpick(true);
+        break;
+        }
+      case CANMOVE:{
+        canmove(true);
+        break;
+        }
+      case BLOCKED:{
+        blocked(true);
+        break;
+        }
+      default:
+        jj_la1[15] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
       }
-    default:
-      jj_la1[15] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-}
-
-  final public void gett(boolean execute) throws ParseException {int f = 1;
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case CHIPS:{
-      jj_consume_token(CHIPS);
-      f = numvar();
-if(execute==true) {
-                world.pickChips(f); salida = "Command: Put Chips"; }
-      break;
-      }
-    case BALLOONS:{
-      jj_consume_token(BALLOONS);
-      f = numvar();
-if(execute==true) {
-              world.grabBalloons(f); salida = "Command: Put Balloons"; }
+      jj_consume_token(LBRACKET);
       break;
       }
     default:
@@ -939,131 +987,59 @@ if(execute==true) {
     }
 }
 
-  final public int numvar() throws ParseException, Error {int value= 0;
-                String name;
+  final public void facing(boolean not) throws ParseException {String o;
+    int actual;
+    int comp;
+    jj_consume_token(FACING);
+    o = orientation();
+actual = world.getFacing();
+        comp = getNumCardinal(o);
+        if (actual == comp) {
+            this.boolexecuter = true;
+        } else {
+            this.boolexecuter = false;
+        }
+        if (not == true) {
+            this.boolexecuter = !this.boolexecuter;
+        }
+        System.out.println("Valor de boolexecuter: " + this.boolexecuter);
+}
+
+  final public void zero(boolean not) throws ParseException {int o;
+    jj_consume_token(ISZERO);
+    o = numvar();
+if (o==0) {
+            this.boolexecuter = true;
+        }else {
+                        this.boolexecuter = false;
+           }
+
+                if (not == true) {
+            this.boolexecuter = !this.boolexecuter;
+        }
+}
+
+  final public void canput(boolean not) throws ParseException {int f=1;
+                boolean can = true;
+    jj_consume_token(CANPUT);
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case NUMS:{
-      jj_consume_token(NUMS);
-try
-                        {
-                                value = Integer.parseInt(token.image);
-                        }
-                        catch (NumberFormatException ee)
-                        {
-                                {if (true) throw new Error("Number out of bounds: "+token.image+" !!");}
-                        }
-                        {if ("" != null) return value;}
+    case CHIPS:{
+      jj_consume_token(CHIPS);
+      f = numvar();
+Point p = world.getPosition();
+                  if (world.chipExists(new Point(p.x, p.y+f-1))) {
+                        can = false;
+                     }
+                  if (!(world.getN()-p.y >=f)) {
+                        can = false;
+                                 }
+                  this.boolexecuter= can;
       break;
       }
-    case NAME:{
-      jj_consume_token(NAME);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  (int) variableValues.get(name);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("The variable was not registered in the VAR protocol");}
-                        }
-                        {if ("" != null) return value;}
-      break;
-      }
-    case DIM:{
-      jj_consume_token(DIM);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  world.getN();
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("The variable was not registered in the VAR protocol");}
-                        }
-                        {if ("" != null) return value;}
-      break;
-      }
-    case MYXPOS:{
-      jj_consume_token(MYXPOS);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  (int) world.getPosition().getX();
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("The variable was not registered in the VAR protocol");}
-                        }
-                        {if ("" != null) return value;}
-      break;
-      }
-    case MYYPOS:{
-      jj_consume_token(MYYPOS);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  (int) world.getPosition().getY();
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("The variable was not registered in the VAR protocol");}
-                        }
-                        {if ("" != null) return value;}
-      break;
-      }
-    case MYCHIPS:{
-      jj_consume_token(MYCHIPS);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  (int) world.getMyChips();
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("The variable was not registered in the VAR protocol");}
-                        }
-                        {if ("" != null) return value;}
-      break;
-      }
-    case MYBALLOONS:{
-      jj_consume_token(MYBALLOONS);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  (int) world.getMyBalloons();
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("The variable was not registered in the VAR protocol");}
-                        }
-                        {if ("" != null) return value;}
-      break;
-      }
-    case BALLOONSHERE:{
-      jj_consume_token(BALLOONSHERE);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  world.countBalloons();
-                        }
-                        catch (Exception e)
-                        {
-                        }
-                        {if ("" != null) return value;}
-      break;
-      }
-    case CHIPSHERE:{
-      jj_consume_token(CHIPSHERE);
-try
-                        {
-                                name = String.valueOf(token.image);
-                                value =  this.chipshere;
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("The variable was not registered in the VAR protocol");}
-                        }
-                        {if ("" != null) return value;}
+    case BALLOONS:{
+      jj_consume_token(BALLOONS);
+      f = numvar();
+this.boolexecuter= world.getMyBalloons()-f >= 0;
       break;
       }
     default:
@@ -1071,61 +1047,27 @@ try
       jj_consume_token(-1);
       throw new ParseException();
     }
-    throw new Error("Missing return statement in function");
+if (not == true) {
+            this.boolexecuter = !this.boolexecuter;
+        }
+        System.out.println("Valor de boolexecuter: " + this.boolexecuter);
 }
 
-  final public String direction() throws ParseException, Error {String dir= "";
+  final public void canpick(boolean not) throws ParseException {int f=1;
+    jj_consume_token(CANPICK);
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case RIGHT:{
-      jj_consume_token(RIGHT);
-try
-                        {
-                                dir += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error detected while reading the direction !!");}
-                        }
-                        {if ("" != null) return dir;}
+    case CHIPS:{
+      jj_consume_token(CHIPS);
+      f = numvar();
+Point p = world.getPosition();
+                  if (world.chipExists(p) && f == 1) { this.boolexecuter= true; }
+                  else { this.boolexecuter= false; }
       break;
       }
-    case LEFT:{
-      jj_consume_token(LEFT);
-try
-                        {
-                                dir += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error detected while reading the direction !!");}
-                        }
-                        {if ("" != null) return dir;}
-      break;
-      }
-    case FRONT:{
-      jj_consume_token(FRONT);
-try
-                        {
-                                dir += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error detected while reading the direction !!");}
-                        }
-                        {if ("" != null) return dir;}
-      break;
-      }
-    case BACK:{
-      jj_consume_token(BACK);
-try
-                        {
-                                dir += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error detected while reading the direction !!");}
-                        }
-                        {if ("" != null) return dir;}
+    case BALLOONS:{
+      jj_consume_token(BALLOONS);
+      f = numvar();
+this.boolexecuter= world.countBalloons()-f >= 0;
       break;
       }
     default:
@@ -1133,62 +1075,112 @@ try
       jj_consume_token(-1);
       throw new ParseException();
     }
-    throw new Error("Missing return statement in function");
-}
-
-/* El nombre de una función es una cadena alfanumérica */
-  final public String nombreFuncion() throws ParseException, Error {String nombre = "";
-    jj_consume_token(NAME);
-try
-                        {
-                                nombre += String.valueOf(token.image);
-                        }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error detected while reading variable !!");}
-                        }
-                        {if ("" != null) return nombre;}
-    throw new Error("Missing return statement in function");
-}
-
-/* Los parámetros de una función son cadenas alfabéticas */
-  final public String parametroFuncion() throws ParseException, Error {String parametro = "";
-    jj_consume_token(NAME);
-    label_4:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case NUMS:{
-        ;
-        break;
+if (not == true) {
+            this.boolexecuter = !this.boolexecuter;
         }
-      default:
-        jj_la1[19] = jj_gen;
-        break label_4;
-      }
-      jj_consume_token(NUMS);
-    }
-try
-                        {
-                                parametro += String.valueOf(token.image);
+        System.out.println("Valor de boolexecuter: " + this.boolexecuter);
+}
+
+  final public void canmove(boolean not) throws ParseException {boolean can = true;
+          String o;
+          int wanted;
+          Point actual;
+          int x, y;
+
+          o = null;
+          wanted = 0;
+          x = 0;
+          y = 0;
+    jj_consume_token(CANMOVE);
+    o = orientation();
+actual = world.getPosition();
+                        Point pos = new Point(1, 1);
+
+                        wanted = getNumCardinal(o);
+                        x = (int)actual.getX();
+                        y = (int)actual.getY();
+                        System.out.println("Actual: "+actual);
+                        System.out.println("pos: "+pos);
+                        if (wanted == 0) {
+                          pos.setLocation(x,y-1);}
+                        else if (wanted == 1) {
+                          pos.setLocation(x,y+1);}
+                        else if (wanted == 2) {
+                          pos.setLocation(x+1,y);}
+                        else if (wanted == 3) {
+                          pos.setLocation(x-1,y);}
+                System.out.println("Trueval canJumpInDir: "+x);
+                System.out.println("Trueval canJumpInDir: "+y);
+                System.out.println("Trueval canJumpInDir: "+world.getN());
+                System.out.println("Trueval canJumpInDir: "+pos);
+                 if (pos.x >world.getN() || pos.y >world.getN() || pos.x<1 || pos.y<1) {
+                this.boolexecuter = false;
+
+
+                 }else {
+                                this.boolexecuter = !world.isBlocked(pos);
                         }
-                        catch (Exception e)
-                        {
-                                {if (true) throw new Error("Error detected while reading variable !!");}
+
+                    if (not == true) {
+                this.boolexecuter = !this.boolexecuter;
+                 }
+
+                        System.out.println("Trueval canJumpInDir: "+this.boolexecuter);
+}
+
+  final public void blocked(boolean not) throws ParseException {boolean can = true;
+          String o;
+          int wanted;
+          Point actual;
+          int x, y;
+
+          o = null;
+          wanted = 0;
+          x = 0;
+          y = 0;
+    jj_consume_token(BLOCKED);
+actual = world.getPosition();
+                        Point pos = new Point(1, 1);
+
+                        wanted = world.getFacing();
+                        x = (int)actual.getX();
+                        y = (int)actual.getY();
+                        System.out.println("Actual: "+actual);
+                        System.out.println("pos: "+pos);
+                        if (wanted == 0) {
+                          pos.setLocation(x,y-1);}
+                        else if (wanted == 1) {
+                          pos.setLocation(x,y+1);}
+                        else if (wanted == 2) {
+                          pos.setLocation(x+1,y);}
+                        else if (wanted == 3) {
+                          pos.setLocation(x-1,y);}
+                System.out.println("Trueval canJumpInDir: "+x);
+                System.out.println("Trueval canJumpInDir: "+y);
+                System.out.println("Trueval canJumpInDir: "+world.getN());
+                System.out.println("Trueval canJumpInDir: "+pos);
+                 if (pos.x >world.getN() || pos.y >world.getN() || pos.x<1 || pos.y<1) {
+                this.boolexecuter = true;
+
+
+                 }else {
+                                this.boolexecuter = world.isBlocked(pos);
                         }
-                        {if ("" != null) return parametro;}
-    throw new Error("Missing return statement in function");
+
+                    if (not == true) {
+                this.boolexecuter = !this.boolexecuter;
+                 }
+
+                        System.out.println("Trueval canJumpInDir: "+this.boolexecuter);
 }
 
 /* Estructura de función es (defun nombre (params) (c1)(c2)...(cn))*/
   final public void funcion() throws ParseException {String nombreFun;
-          String parametro;
-          String block;
-          ArrayList<String> parametros = new ArrayList<>();
-          ArrayList<String> bloques = new ArrayList<>();
+  String parametro;
     jj_consume_token(DEFUN);
     nombreFun = nombreFuncion();
-    jj_consume_token(LBRACKET);
-    label_5:
+    jj_consume_token(RBRACKET);
+    label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case NAME:{
@@ -1196,22 +1188,31 @@ try
         break;
         }
       default:
-        jj_la1[20] = jj_gen;
-        break label_5;
+        jj_la1[19] = jj_gen;
+        break label_6;
       }
       parametro = parametroFuncion();
-//Agregar cada parámetro de la función a una lista
-            parametros.add(parametro);
-            //Agregar cada parámetro a la lista de variables auxiliares
-            variablesAuxiliares.add(parametro);
     }
-    jj_consume_token(RBRACKET);
-//Añadir la lista final al mapa de { procedimientos:[parametros] }
-            procParams.put(nombreFun, parametros);
-    block = bloque();
-bloques.add(block);
-              System.out.println(procParams);
-              System.out.println(procBloques);
+    jj_consume_token(LBRACKET);
+}
+
+// TODO
+// =================================================================================
+// AUXILIARES: Invocadas para ayudar a otros métodos
+// =================================================================================
+  final public 
+int getNumCardinal(String o) throws ParseException {int numCardinal;
+  numCardinal=0;
+if (o.equals(":north")) {
+          numCardinal = 0; }
+        else if (o.equals(":south")) {
+          numCardinal = 1; }
+        else if (o.equals(":east")) {
+          numCardinal = 2; }
+        else if (o.equals(":west")) {
+          numCardinal = 3; }
+        {if ("" != null) return numCardinal;}
+    throw new Error("Missing return statement in function");
 }
 
   /** Generated Token Manager. */
@@ -1223,7 +1224,7 @@ bloques.add(block);
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[21];
+  final private int[] jj_la1 = new int[20];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -1231,10 +1232,10 @@ bloques.add(block);
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x1,0xc00,0xc00,0xfc000000,0xfc000000,0x0,0x0,0x0,0xc00,0xc00,0x1e0,0xfc000000,0x260,0x3c000,0xc00,0xc00,0x1fc0000,0x1e0,0x0,0x0,};
+	   jj_la1_0 = new int[] {0x0,0x1,0x1fc0000,0x3c000,0x1e0,0x260,0x0,0xc00,0xc00,0xfc000000,0xfc000000,0xfc000000,0x1e0,0xfc000000,0x0,0x0,0x0,0xc00,0xc00,0x0,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x100,0x100,0x0,0x0,0x37f,0x37f,0xfc00,0xfc00,0x1fc00,0x0,0x0,0x0,0x3f,0x0,0x0,0x0,0x0,0xa0000,0x0,0x80000,0x20000,};
+	   jj_la1_1 = new int[] {0x80,0x80,0xa0000,0x0,0x0,0x0,0x80000,0x0,0x0,0xbf,0x3ff,0x3ff,0x0,0xbf,0xfc00,0xfc00,0x1fc00,0x0,0x0,0x20000,};
 	}
 
   /** Constructor with InputStream. */
@@ -1248,7 +1249,7 @@ bloques.add(block);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1262,7 +1263,7 @@ bloques.add(block);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -1272,7 +1273,7 @@ bloques.add(block);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1290,7 +1291,7 @@ bloques.add(block);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -1299,7 +1300,7 @@ bloques.add(block);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1308,7 +1309,7 @@ bloques.add(block);
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -1359,12 +1360,12 @@ bloques.add(block);
   /** Generate ParseException. */
   public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[56];
+	 boolean[] la1tokens = new boolean[55];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 21; i++) {
+	 for (int i = 0; i < 20; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1376,7 +1377,7 @@ bloques.add(block);
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 56; i++) {
+	 for (int i = 0; i < 55; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;

@@ -79,9 +79,9 @@ public interface RobotConstants {
   /** RegularExpression Id. */
   int DEFUN = 38;
   /** RegularExpression Id. */
-  int RBRACKET = 39;
+  int LBRACKET = 39;
   /** RegularExpression Id. */
-  int LBRACKET = 40;
+  int RBRACKET = 40;
   /** RegularExpression Id. */
   int IF = 41;
   /** RegularExpression Id. */
@@ -140,7 +140,7 @@ public interface RobotConstants {
     "\"myChips\"",
     "\"myBalloons\"",
     "\"balloonsHere\"",
-    "\"ChipsHere\"",
+    "\"chipsHere\"",
     "\"Spaces\"",
     "\"move\"",
     "\"=\"",
@@ -155,8 +155,8 @@ public interface RobotConstants {
     "\"pick\"",
     "\"skip\"",
     "\"defun\"",
-    "\")\"",
     "\"(\"",
+    "\")\"",
     "\"if\"",
     "\"facing?\"",
     "\"blocked?\"",
@@ -171,7 +171,6 @@ public interface RobotConstants {
     "<NUM>",
     "<DIGIT>",
     "<INITIALDIGIT>",
-    "\",\"",
   };
 
 }
