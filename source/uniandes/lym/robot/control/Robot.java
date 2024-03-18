@@ -34,9 +34,7 @@ public class Robot implements RobotConstants {
 // =================================================================================
   final public boolean command(Console sistema) throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case DEFUN:
-    case LBRACKET:
-    case IF:{
+    case LBRACKET:{
       label_1:
       while (true) {
         commandBlock(true);
@@ -49,9 +47,7 @@ try {
                 sistema.printOutput(salida);
                 {if ("" != null) return true;}
         switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-        case DEFUN:
-        case LBRACKET:
-        case IF:{
+        case LBRACKET:{
           ;
           break;
           }
@@ -471,7 +467,7 @@ try
 // =================================================================================
 
 // Operación de dejar
-  final public void put(boolean execute) throws ParseException {int f = 1;
+  final public String put(boolean execute) throws ParseException {int f = 1;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case CHIPS:{
       jj_consume_token(CHIPS);
@@ -480,6 +476,7 @@ if(execute==true) {
         world.putChips(f);
         salida = "Command: Put Chips";
       }
+      {if ("" != null) return "(put :chips " + Integer.toString(f) + ")";}
       break;
       }
     case BALLOONS:{
@@ -489,6 +486,7 @@ if(execute==true) {
         world.putBalloons(f);
         salida = "Command: Put Balloons";
       }
+      {if ("" != null) return "(put :balloons " + Integer.toString(f) + ")";}
       break;
       }
     default:
@@ -496,10 +494,11 @@ if(execute==true) {
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
 }
 
 // Operación de recoger
-  final public void get(boolean execute) throws ParseException {int f = 1;
+  final public String get(boolean execute) throws ParseException {int f = 1;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case CHIPS:{
       jj_consume_token(CHIPS);
@@ -508,6 +507,7 @@ if(execute==true) {
         world.pickChips(f);
         salida = "Command: Put Chips";
       }
+      {if ("" != null) return "(pick :chips " + Integer.toString(f) + ")";}
       break;
       }
     case BALLOONS:{
@@ -517,6 +517,7 @@ if(execute==true) {
             world.grabBalloons(f);
             salida = "Command: Put Balloons";
       }
+      {if ("" != null) return "(pick :balloons " + Integer.toString(f) + ")";}
       break;
       }
     default:
@@ -524,6 +525,7 @@ if(execute==true) {
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
 }
 
 // TODO
@@ -535,25 +537,15 @@ if(execute==true) {
   final public void commandBlock(boolean execute) throws ParseException {
     if (jj_2_1(2)) {
       commandprotocol(execute);
+    } else if (jj_2_2(2)) {
+      conditionalprotocol();
+    } else if (jj_2_3(2)) {
+      funcion();
+    } else if (jj_2_4(2)) {
+      listaComandos(execute);
     } else {
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case IF:{
-        conditionalprotocol();
-        break;
-        }
-      case DEFUN:{
-        funcion();
-        break;
-        }
-      default:
-        jj_la1[9] = jj_gen;
-        if (jj_2_2(2)) {
-          listaComandos(execute);
-        } else {
-          jj_consume_token(-1);
-          throw new ParseException();
-        }
-      }
+      jj_consume_token(-1);
+      throw new ParseException();
     }
 }
 
@@ -568,19 +560,20 @@ if(execute==true) {
         break;
         }
       default:
-        jj_la1[10] = jj_gen;
+        jj_la1[9] = jj_gen;
         break label_3;
       }
     }
     jj_consume_token(RBRACKET);
 }
 
-  final public void commandprotocol(boolean execute) throws ParseException {int x,y;
+  final public String commandprotocol(boolean execute) throws ParseException {int x,y;
         String namevar;
         String direction;
         String direccion;
         salida=new String();
         y = world.getFacing();
+        String comando = "";
     jj_consume_token(LBRACKET);
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case DEFVAR:{
@@ -594,6 +587,7 @@ if (!variableValues.containsKey(namevar)) {
         } else {
             System.out.println(salida="Ya existe una variable asociada con ese nombre");
         }
+        comando = "(defvar " + namevar + " " + Integer.toString(x) + ")";
       break;
       }
     case EQUAL:{
@@ -607,6 +601,7 @@ if (variableValues.containsKey(namevar)) {
         } else {
             System.out.println(salida="No existe una variable asociada con ese nombre");
         }
+        comando = "(= " + namevar + " " + Integer.toString(x) + ")";
       break;
       }
     case MOVE:{
@@ -615,6 +610,7 @@ if (variableValues.containsKey(namevar)) {
 if(execute==true) {
                 world.moveForward(x,false);salida = "Command: move ";
         }
+        comando = "(move " + Integer.toString(x) + ")";
       break;
       }
     case HOP:{
@@ -623,6 +619,7 @@ if(execute==true) {
 if(execute==true) {
                 world.moveForward(x,true);salida = "Command: skip ";
         }
+        comando = "(skip " + Integer.toString(x) + ")";
       break;
       }
     case TURN:{
@@ -649,6 +646,7 @@ if (direction.equals(":right")) {
         } else {
             salida = "Not valid";
         }
+        comando = "(turn " + direction + ")";
       break;
       }
     case FACE:{
@@ -679,6 +677,7 @@ if(execute==true) {
                         salida = "Non valid command";
                     }
               }
+              comando = "(face " + direccion + ")";
       break;
       }
     case MOVEDIR:{
@@ -708,6 +707,7 @@ if(execute==true) {
                         salida = "Non valid direction";
                     }
                  }
+                 comando = "(move-dir " + Integer.toString(x) + " " + direction + ")";
       break;
       }
     case MOVEFACE:{
@@ -744,14 +744,17 @@ if(execute==true) {
             } else {
                 salida = "Non valid command";
             }
+            comando = "(move-face " + Integer.toString(x) + " " + direccion + ")";
          }
       break;
       }
     case NULL:{
       jj_consume_token(NULL);
+comando = "(null)";
       break;
       }
     case RUNDIRS:{
+String direcciones = "";
       jj_consume_token(RUNDIRS);
       label_4:
       while (true) {
@@ -805,6 +808,7 @@ if(execute==true) {
                                         salida = "facing east";
                                   }
                      }
+                     direcciones += " " + direction + " ";
         switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
         case RIGHT:
         case LEFT:
@@ -814,32 +818,38 @@ if(execute==true) {
           break;
           }
         default:
-          jj_la1[11] = jj_gen;
+          jj_la1[10] = jj_gen;
           break label_4;
         }
       }
+comando = "(run-dirs " + direcciones + ")";
       break;
       }
     case PUT:{
       jj_consume_token(PUT);
       put(execute);
+comando = put(execute);
       break;
       }
     case PICK:{
       jj_consume_token(PICK);
       get(execute);
+comando = get(execute);
       break;
       }
     default:
-      jj_la1[12] = jj_gen;
+      jj_la1[11] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
     jj_consume_token(RBRACKET);
+{if ("" != null) return comando;}
+    throw new Error("Missing return statement in function");
 }
 
 //Aqui se establece la estructura de un condicional, hasta el momento solo funciona con comandos
-  final public void conditionalprotocol() throws ParseException {
+  final public String conditionalprotocol() throws ParseException {
+    jj_consume_token(LBRACKET);
     jj_consume_token(IF);
     jj_consume_token(LBRACKET);
     condition();
@@ -850,6 +860,9 @@ if(execute==true) {
     jj_consume_token(LBRACKET);
     commandprotocol(!this.boolexecuter);
     jj_consume_token(RBRACKET);
+    jj_consume_token(RBRACKET);
+{if ("" != null) return "Condicional";}
+    throw new Error("Missing return statement in function");
 }
 
 // Condición que interpreta un condicional y un loop
@@ -887,7 +900,7 @@ if(execute==true) {
         break;
         }
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[12] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -922,7 +935,7 @@ if(execute==true) {
         break;
         }
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[13] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -930,7 +943,7 @@ if(execute==true) {
       break;
       }
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[14] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -992,7 +1005,7 @@ this.boolexecuter= world.getMyBalloons()-f >= 0;
       break;
       }
     default:
-      jj_la1[16] = jj_gen;
+      jj_la1[15] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1020,7 +1033,7 @@ this.boolexecuter= world.countBalloons()-f >= 0;
       break;
       }
     default:
-      jj_la1[17] = jj_gen;
+      jj_la1[16] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1124,10 +1137,11 @@ actual = world.getPosition();
 }
 
 /* Estructura de función es (defun nombre (params) (c1)(c2)...(cn))*/
-  final public void funcion() throws ParseException {String nombreFun;
+  final public String funcion() throws ParseException {String nombreFun;
   String parametro;
   ArrayList<String> parametros = new ArrayList<String>();
   ArrayList<String> comandos = new ArrayList<String>();
+    jj_consume_token(LBRACKET);
     jj_consume_token(DEFUN);
     nombreFun = nombreFuncion();
 procNames.add(nombreFun);
@@ -1137,10 +1151,7 @@ procParams.put(nombreFun, parametros);
     jj_consume_token(LBRACKET);
     label_5:
     while (true) {
-      commandprotocol(false);
-      jj_consume_token(LBRACKET);
       commandBlock(false);
-      jj_consume_token(RBRACKET);
 comandos.add(token_source.toString());
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case LBRACKET:{
@@ -1148,7 +1159,7 @@ comandos.add(token_source.toString());
         break;
         }
       default:
-        jj_la1[18] = jj_gen;
+        jj_la1[17] = jj_gen;
         break label_5;
       }
     }
@@ -1156,6 +1167,9 @@ System.out.println(comandos);
     jj_consume_token(RBRACKET);
 procBloques.put(nombreFun, comandos);
     System.out.println(procBloques);
+    jj_consume_token(RBRACKET);
+{if ("" != null) return "funcion";}
+    throw new Error("Missing return statement in function");
 }
 
   final public ArrayList<String> listaParametros() throws ParseException {String v = "";
@@ -1172,7 +1186,7 @@ variablesAuxiliares.add(v);
         break;
         }
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[18] = jj_gen;
         break label_6;
       }
       v = var();
@@ -1219,141 +1233,189 @@ if (o.equals(":north")) {
     finally { jj_save(1, xla); }
   }
 
-  private boolean jj_3R_commandprotocol_655_11_12()
+  private boolean jj_2_3(int xla)
  {
-    if (jj_scan_token(HOP)) return true;
-    return false;
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return (!jj_3_3()); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(2, xla); }
   }
 
-  private boolean jj_3R_commandprotocol_717_16_15()
+  private boolean jj_2_4(int xla)
  {
-    if (jj_scan_token(MOVEDIR)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_842_28_19()
- {
-    if (jj_scan_token(PICK)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_840_28_18()
- {
-    if (jj_scan_token(PUT)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_688_18_14()
- {
-    if (jj_scan_token(FACE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_648_11_11()
- {
-    if (jj_scan_token(MOVE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_listaComandos_606_4_20()
- {
-    if (jj_3R_commandprotocol_623_9_7()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_626_7_9()
- {
-    if (jj_scan_token(DEFVAR)) return true;
-    return false;
-  }
-
-  private boolean jj_3_2()
- {
-    if (jj_3R_listaComandos_605_3_8()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_623_9_7()
- {
-    if (jj_scan_token(LBRACKET)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_commandprotocol_626_7_9()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_637_11_10()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_648_11_11()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_655_11_12()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_663_10_13()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_688_18_14()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_717_16_15()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_744_16_16()) {
-    jj_scanpos = xsp;
-    if (jj_scan_token(34)) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_785_21_17()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_840_28_18()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_842_28_19()) return true;
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_listaComandos_605_3_8()
- {
-    if (jj_scan_token(LBRACKET)) return true;
-    Token xsp;
-    if (jj_3R_listaComandos_606_4_20()) return true;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_listaComandos_606_4_20()) { jj_scanpos = xsp; break; }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_663_10_13()
- {
-    if (jj_scan_token(TURN)) return true;
-    return false;
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return (!jj_3_4()); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(3, xla); }
   }
 
   private boolean jj_3_1()
  {
-    if (jj_3R_commandprotocol_623_9_7()) return true;
+    if (jj_3R_commandprotocol_626_9_7()) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_637_11_10()
+  private boolean jj_3R_commandprotocol_641_11_12()
  {
     if (jj_scan_token(EQUAL)) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_785_21_17()
+  private boolean jj_3R_commandprotocol_857_28_22()
+ {
+    if (jj_scan_token(PICK)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_726_16_17()
+ {
+    if (jj_scan_token(MOVEDIR)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_funcion_1115_3_9()
+ {
+    if (jj_scan_token(LBRACKET)) return true;
+    if (jj_scan_token(DEFUN)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_854_28_21()
+ {
+    if (jj_scan_token(PUT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_conditionalprotocol_871_3_8()
+ {
+    if (jj_scan_token(LBRACKET)) return true;
+    if (jj_scan_token(IF)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_629_7_11()
+ {
+    if (jj_scan_token(DEFVAR)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_626_9_7()
+ {
+    if (jj_scan_token(LBRACKET)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_commandprotocol_629_7_11()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_641_11_12()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_653_11_13()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_661_11_14()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_670_10_15()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_696_18_16()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_726_16_17()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_754_16_18()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_792_24_19()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_798_21_20()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_854_28_21()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_857_28_22()) return true;
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_670_10_15()
+ {
+    if (jj_scan_token(TURN)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_798_21_20()
  {
     if (jj_scan_token(RUNDIRS)) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_744_16_16()
+  private boolean jj_3R_commandprotocol_754_16_18()
  {
     if (jj_scan_token(MOVEFACE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_792_24_19()
+ {
+    if (jj_scan_token(NULL)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_661_11_14()
+ {
+    if (jj_scan_token(HOP)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_696_18_16()
+ {
+    if (jj_scan_token(FACE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_653_11_13()
+ {
+    if (jj_scan_token(MOVE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_listaComandos_610_4_23()
+ {
+    if (jj_3R_commandprotocol_626_9_7()) return true;
+    return false;
+  }
+
+  private boolean jj_3_4()
+ {
+    if (jj_3R_listaComandos_609_3_10()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_listaComandos_609_3_10()
+ {
+    if (jj_scan_token(LBRACKET)) return true;
+    Token xsp;
+    if (jj_3R_listaComandos_610_4_23()) return true;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_listaComandos_610_4_23()) { jj_scanpos = xsp; break; }
+    }
+    return false;
+  }
+
+  private boolean jj_3_3()
+ {
+    if (jj_3R_funcion_1115_3_9()) return true;
+    return false;
+  }
+
+  private boolean jj_3_2()
+ {
+    if (jj_3R_conditionalprotocol_871_3_8()) return true;
     return false;
   }
 
@@ -1368,7 +1430,7 @@ if (o.equals(":north")) {
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[20];
+  final private int[] jj_la1 = new int[19];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -1376,12 +1438,12 @@ if (o.equals(":north")) {
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x0,0x1,0x1fc0000,0x3c000,0x1e0,0x260,0x0,0xc00,0xc00,0x0,0x0,0x1e0,0xfc000000,0x0,0x0,0x0,0xc00,0xc00,0x0,0x0,};
+	   jj_la1_0 = new int[] {0x0,0x1,0x1fc0000,0x3c000,0x1e0,0x260,0x0,0xc00,0xc00,0x0,0x1e0,0xfc000000,0x0,0x0,0x0,0xc00,0xc00,0x0,0x0,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x2c0,0x2c0,0xa0000,0x0,0x0,0x0,0x80000,0x0,0x0,0x240,0x80,0x0,0x3f,0xfc00,0xfc00,0x1fc00,0x0,0x0,0x80,0x20000,};
+	   jj_la1_1 = new int[] {0x80,0x80,0xa0000,0x0,0x0,0x0,0x80000,0x0,0x0,0x80,0x0,0x3f,0xfc00,0xfc00,0x1fc00,0x0,0x0,0x80,0x20000,};
 	}
-  final private JJCalls[] jj_2_rtns = new JJCalls[2];
+  final private JJCalls[] jj_2_rtns = new JJCalls[4];
   private boolean jj_rescan = false;
   private int jj_gc = 0;
 
@@ -1396,7 +1458,7 @@ if (o.equals(":north")) {
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 19; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1411,7 +1473,7 @@ if (o.equals(":north")) {
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 19; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1422,7 +1484,7 @@ if (o.equals(":north")) {
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 19; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1441,7 +1503,7 @@ if (o.equals(":north")) {
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 19; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1451,7 +1513,7 @@ if (o.equals(":north")) {
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 19; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1461,7 +1523,7 @@ if (o.equals(":north")) {
 	 token = new Token();
 	 jj_ntk = -1;
 	 jj_gen = 0;
-	 for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+	 for (int i = 0; i < 19; i++) jj_la1[i] = -1;
 	 for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1597,7 +1659,7 @@ if (o.equals(":north")) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
 	 }
-	 for (int i = 0; i < 20; i++) {
+	 for (int i = 0; i < 19; i++) {
 	   if (jj_la1[i] == jj_gen) {
 		 for (int j = 0; j < 32; j++) {
 		   if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1643,7 +1705,7 @@ if (o.equals(":north")) {
 
   private void jj_rescan_token() {
 	 jj_rescan = true;
-	 for (int i = 0; i < 2; i++) {
+	 for (int i = 0; i < 4; i++) {
 	   try {
 		 JJCalls p = jj_2_rtns[i];
 
@@ -1653,6 +1715,8 @@ if (o.equals(":north")) {
 			 switch (i) {
 			   case 0: jj_3_1(); break;
 			   case 1: jj_3_2(); break;
+			   case 2: jj_3_3(); break;
+			   case 3: jj_3_4(); break;
 			 }
 		   }
 		   p = p.next;

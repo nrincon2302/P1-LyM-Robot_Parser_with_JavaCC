@@ -539,7 +539,7 @@ String parametroFuncion() throws Error:
 // =================================================================================
 
 // Operación de dejar
-void put(boolean execute) :
+String put(boolean execute) :
 {
     int f = 1;    
 }  
@@ -550,6 +550,7 @@ void put(boolean execute) :
         world.putChips(f);
         salida = "Command: Put Chips";
       }
+      return "(put :chips " + Integer.toString(f) + ")";
     }
     | <BALLOONS> f = numvar()
     {
@@ -557,12 +558,13 @@ void put(boolean execute) :
         world.putBalloons(f);
         salida = "Command: Put Balloons";
       }
+      return "(put :balloons " + Integer.toString(f) + ")";
     }
 }
 
 
 // Operación de recoger
-void get(boolean execute) :
+String get(boolean execute) :
 {
     int f = 1;    
 }
@@ -573,6 +575,7 @@ void get(boolean execute) :
       	world.pickChips(f);
       	salida = "Command: Put Chips";
       }
+      return "(pick :chips " + Integer.toString(f) + ")";
     }
     | <BALLOONS> f = numvar()
     {
@@ -580,6 +583,7 @@ void get(boolean execute) :
 	    world.grabBalloons(f);
 	    salida = "Command: Put Balloons";
       }
+      return "(pick :balloons " + Integer.toString(f) + ")";
     }
 }
 
@@ -593,8 +597,8 @@ void commandBlock(boolean execute) :
 {}
 {
 	LOOKAHEAD(2) commandprotocol(execute)
-	| conditionalprotocol()
-	| funcion()
+	| LOOKAHEAD(2) conditionalprotocol()
+	| LOOKAHEAD(2) funcion()
 	| LOOKAHEAD(2) listaComandos(execute)
 }
 
@@ -607,8 +611,7 @@ void listaComandos(boolean execute):
   < RBRACKET >
 }
 
-
-void commandprotocol(boolean execute) :
+String commandprotocol(boolean execute) :
 {
 	int x,y;
 	String namevar;
@@ -616,13 +619,14 @@ void commandprotocol(boolean execute) :
 	String direccion;
 	salida=new String();
 	y = world.getFacing();
-
+	String comando = "";
 }
 {
 	// Todo comando es una declaración encerrada en paréntesis
   	<LBRACKET>
     // Crear variables
-    (      <DEFVAR> namevar=var() x=num()
+    (
+      <DEFVAR> namevar=var() x=num()
     {
         if (!variableValues.containsKey(namevar)) {
           	if(execute==true) { 
@@ -631,6 +635,7 @@ void commandprotocol(boolean execute) :
         } else {
             System.out.println(salida="Ya existe una variable asociada con ese nombre");
         }
+        comando = "(defvar " + namevar + " " + Integer.toString(x) + ")";
     }
   	 // Reasignar variables
  	| <EQUAL> namevar=var() x=num()
@@ -642,6 +647,7 @@ void commandprotocol(boolean execute) :
         } else {
             System.out.println(salida="No existe una variable asociada con ese nombre");
         }
+        comando = "(= " + namevar + " " + Integer.toString(x) + ")";
     }
    	 // moverse
  	| <MOVE> x=numvar()
@@ -649,6 +655,7 @@ void commandprotocol(boolean execute) :
   	  	if(execute==true) { 
         	world.moveForward(x,false);salida = "Command: move ";
         }
+        comando = "(move " + Integer.toString(x) + ")";
     }
    	 // saltar
  	| <HOP> x=numvar()
@@ -656,6 +663,7 @@ void commandprotocol(boolean execute) :
   	 	if(execute==true) { 
         	world.moveForward(x,true);salida = "Command: skip ";
         }
+        comando = "(skip " + Integer.toString(x) + ")";
     }
 
 	// Girar
@@ -682,6 +690,7 @@ void commandprotocol(boolean execute) :
         } else { 
             salida = "Not valid"; 
         }
+        comando = "(turn " + direction + ")";
     }
 	// Mirar 
 	|	 <FACE>  direccion = orientation()
@@ -711,6 +720,7 @@ void commandprotocol(boolean execute) :
 	                salida = "Non valid command";
 	            }
 	      }
+	      comando = "(face " + direccion + ")";
     }
 	// Moverse en una direccion 
 	    |  < MOVEDIR> x=numvar() direction = direction(){
@@ -737,6 +747,7 @@ void commandprotocol(boolean execute) :
 		        salida = "Non valid direction";
 		    }
 		 }
+		 comando = "(move-dir " + Integer.toString(x) + " " + direction + ")";
 	}
 		  
 	// Move face
@@ -772,17 +783,20 @@ void commandprotocol(boolean execute) :
             } else {
                 salida = "Non valid command";
             }
+            comando = "(move-face " + Integer.toString(x) + " " + direccion + ")";
          }
+         
         }
      // null 
 
 		    |  < NULL>
+		    { comando = "(null)"; }
 		    
      // Moverse de acuerdo a una lista de direcciones
 
-		    | 
+		    |
+		    { String direcciones = ""; }
 		    <RUNDIRS> (direction =direction(){
-
 		      if(execute==true) {
 
 				    if (direction.equals(":right")) {
@@ -831,26 +845,38 @@ void commandprotocol(boolean execute) :
 			                }
 			                salida = "facing east";
 			          }
-		     } 
+		     }
+		     direcciones += " " + direction + " ";
 		    }
 		    )+
-		          	
+		    { comando = "(run-dirs " + direcciones + ")"; }
 		    // put protocol
 			|  <PUT> put(execute)
+			{ comando = put(execute); }
 			// pick protocol			  			
 			|  <PICK> get(execute)
+			{ comando = get(execute); }
 	)
 	< RBRACKET >
+	{
+	  return comando;
+	}
 }
 
+
 //Aqui se establece la estructura de un condicional, hasta el momento solo funciona con comandos
-void conditionalprotocol():
+String conditionalprotocol():
 {}
 {
+  < LBRACKET >
   <IF>
   <LBRACKET>condition()<RBRACKET>
   <LBRACKET>commandprotocol(this.boolexecuter)<RBRACKET>
   <LBRACKET>commandprotocol(!this.boolexecuter)<RBRACKET>
+  < RBRACKET >
+  {
+    return "Condicional";
+  }
 }
 	
 // Condición que interpreta un condicional y un loop
@@ -1078,7 +1104,7 @@ void blocked(boolean not):
 	}
 	
 /* Estructura de función es (defun nombre (params) (c1)(c2)...(cn))*/
-void funcion():
+String funcion():
 {
   String nombreFun;
   String parametro;
@@ -1086,6 +1112,7 @@ void funcion():
   ArrayList<String> comandos = new ArrayList<String>();
 }
 {
+  < LBRACKET >
   < DEFUN > nombreFun = nombreFuncion()
   {
     procNames.add(nombreFun);
@@ -1097,7 +1124,7 @@ void funcion():
   }
   < LBRACKET >
     (
-    (commandprotocol(false) <LBRACKET> commandBlock(false) <RBRACKET>)
+    commandBlock(false)
     {
       comandos.add(token_source.toString());
     }
@@ -1109,6 +1136,10 @@ void funcion():
   {
     procBloques.put(nombreFun, comandos);
     System.out.println(procBloques);
+  }
+  < RBRACKET >
+  {
+    return "funcion";
   }
 }
 
