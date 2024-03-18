@@ -38,7 +38,7 @@ public class Robot
 	public ArrayList<String> variablesAuxiliares = new ArrayList<>();
 	public Map<String, ArrayList<String>> procParams = new HashMap<>();
 	public Map<String, ArrayList<String>> procBloques = new HashMap<>();
-	public ArrayList<String > strct_tokens = new ArrayList <String>();
+	public ArrayList<String > procNames = new ArrayList <String>();
 	int chipshere;
 
 	private RobotWorldDec world;
@@ -159,7 +159,7 @@ boolean command(Console sistema):
 {
 	(
 	  //Asegura la ejecución de bloques lógicos individuales
-	  <LBRACKET> commandBlock() < RBRACKET >
+	  commandBlock(true)
 	 {
 	    try {
 	      //Emplea concurrencia para dormir el Thread y que se pueda ver en el dibujo
@@ -589,14 +589,24 @@ void get(boolean execute) :
 // =================================================================================
 
 // Verifican los bloques de comandos existentes (condicionales, funciones, loops...)
-void commandBlock() :
+void commandBlock(boolean execute) :
 {}
 {
-	commandprotocol(true)
+	LOOKAHEAD(2) commandprotocol(execute)
 	| conditionalprotocol()
 	| funcion()
-	| (commandprotocol(true) <LBRACKET> commandBlock() <RBRACKET>)* <RBRACKET>
+	| LOOKAHEAD(2) listaComandos(execute)
 }
+
+
+void listaComandos(boolean execute):
+{}
+{
+  < LBRACKET >
+  (commandprotocol(execute))+
+  < RBRACKET >
+}
+
 
 void commandprotocol(boolean execute) :
 {
@@ -609,12 +619,10 @@ void commandprotocol(boolean execute) :
 
 }
 {
-
-  	<LBRACKET> (commandBlock())+ <RBRACKET> 
-    |
-  
+	// Todo comando es una declaración encerrada en paréntesis
+  	<LBRACKET>
     // Crear variables
-    <DEFVAR> namevar=var() x=num()
+    (      <DEFVAR> namevar=var() x=num()
     {
         if (!variableValues.containsKey(namevar)) {
           	if(execute==true) { 
@@ -831,6 +839,8 @@ void commandprotocol(boolean execute) :
 			|  <PUT> put(execute)
 			// pick protocol			  			
 			|  <PICK> get(execute)
+	)
+	< RBRACKET >
 }
 
 //Aqui se establece la estructura de un condicional, hasta el momento solo funciona con comandos
@@ -1072,12 +1082,57 @@ void funcion():
 {
   String nombreFun;
   String parametro;
+  ArrayList<String> parametros = new ArrayList<String>();
+  ArrayList<String> comandos = new ArrayList<String>();
 }
 {
   < DEFUN > nombreFun = nombreFuncion()
-  < RBRACKET >
-  (parametro = parametroFuncion())*
+  {
+    procNames.add(nombreFun);
+  }
+  parametros = listaParametros()
+  {
+    procParams.put(nombreFun, parametros);
+    System.out.println(procParams);
+  }
   < LBRACKET >
+    (
+    (commandprotocol(false) <LBRACKET> commandBlock(false) <RBRACKET>)
+    {
+      comandos.add(token_source.toString());
+    }
+  )+
+  {
+    System.out.println(comandos);
+  }
+  < RBRACKET >
+  {
+    procBloques.put(nombreFun, comandos);
+    System.out.println(procBloques);
+  }
+}
+
+ArrayList<String> listaParametros():
+{
+  String v = "";
+  ArrayList<String> params = new ArrayList<String>();
+}
+{
+  < LBRACKET >
+  v = var()
+  {
+    variablesAuxiliares.add(v);
+    params.add(v);
+  }
+  (v = var()
+  {
+    variablesAuxiliares.add(v);
+    params.add(v);
+  })*
+  < RBRACKET >
+  {
+    return params;
+  }
 }
 	
 
