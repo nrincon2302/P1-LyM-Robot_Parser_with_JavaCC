@@ -103,13 +103,11 @@ public interface RobotConstants {
   /** RegularExpression Id. */
   int LETTER = 50;
   /** RegularExpression Id. */
-  int NUMS = 51;
+  int NUM = 51;
   /** RegularExpression Id. */
-  int NUM = 52;
+  int DIGIT = 52;
   /** RegularExpression Id. */
-  int DIGIT = 53;
-  /** RegularExpression Id. */
-  int INITIALDIGIT = 54;
+  int INITIALDIGIT = 53;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -167,7 +165,6 @@ public interface RobotConstants {
     "\"not\"",
     "<NAME>",
     "<LETTER>",
-    "<NUMS>",
     "<NUM>",
     "<DIGIT>",
     "<INITIALDIGIT>",

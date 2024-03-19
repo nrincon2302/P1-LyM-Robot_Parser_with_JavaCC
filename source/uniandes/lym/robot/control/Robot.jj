@@ -36,10 +36,14 @@ public class Robot
 	public boolean boolexecuter = true;
 	public Map<String, Object> variableValues = new HashMap<>();
 	public ArrayList<String> variablesAuxiliares = new ArrayList<>();
+	public Map<String, Integer> diccionarioAuxiliar = new HashMap<>();
 	public Map<String, ArrayList<String>> procParams = new HashMap<>();
 	public Map<String, ArrayList<String>> procBloques = new HashMap<>();
-	public ArrayList<String > procNames = new ArrayList <String>();
+	public ArrayList<String> procNames = new ArrayList<>();
+	public ArrayList<String> instrucciones = new ArrayList<>();
 	int chipshere;
+	public static int contadorAuxiliar = 0;
+	public boolean dentroFuncion = false;
 
 	private RobotWorldDec world;
 	
@@ -144,8 +148,7 @@ TOKEN: /* Alfabeto de letras */
 
 TOKEN: /* Alfabeto de números */
 {
-  < NUMS: ((< INITIALDIGIT >)(< DIGIT >)*)|(< DIGIT >) >
-|  < NUM : (< DIGIT >)+ >
+ < NUM : (< DIGIT >)+ >
 | < #DIGIT : ["0"-"9"] >
 |   < #INITIALDIGIT: ["1"-"9"]>
 }
@@ -223,9 +226,10 @@ int numvar() throws Error:
 {	
 	int value= 0;
 	String name;
+	
 }
 {
-	<NUMS>
+	<NUM>
 	{
 		try 
 		{
@@ -243,7 +247,11 @@ int numvar() throws Error:
 		try 
 		{
 			name = String.valueOf(token.image);
-			value =  (int) variableValues.get(name);
+			if (variablesAuxiliares.contains(name)) {
+			  value = (int)diccionarioAuxiliar.get(name);
+			} else { 
+			  value = (int)variableValues.get(name);
+			}
 		} 
 		catch (Exception e) 
 		{
@@ -519,7 +527,7 @@ String parametroFuncion() throws Error:
 	String parametro = "";
 }
 {
-	<NAME>(< NUMS >)*
+	<NAME>(< NUM >)*
 	{
 		try 
 		{
@@ -594,7 +602,7 @@ String get(boolean execute) :
 
 // Verifican los bloques de comandos existentes (condicionales, funciones, loops...)
 void commandBlock(boolean execute) :
-{}
+{instrucciones.clear();}
 {
 	LOOKAHEAD(2) commandprotocol(execute)
 	| LOOKAHEAD(2) conditionalprotocol()
@@ -613,41 +621,59 @@ void listaComandos(boolean execute):
 
 String commandprotocol(boolean execute) :
 {
-	int x,y;
-	String namevar;
-	String direction;
-	String direccion;
+	int x = -1;
+	int y;
+	String namevar="";
+	String direction="";
+	String direccion="";
 	salida=new String();
 	y = world.getFacing();
 	String comando = "";
+	String vparam = "";
 }
 {
 	// Todo comando es una declaración encerrada en paréntesis
   	<LBRACKET>
     // Crear variables
     (
-      <DEFVAR> namevar=var() x=num()
+      <DEFVAR> namevar=var() (x=num()|vparam=direction()|vparam=orientation()|vparam=var())
     {
         if (!variableValues.containsKey(namevar)) {
-          	if(execute==true) { 
+          	if(execute==true) {
+          	  if ((x!=-1)&&(vparam.toString()=="")) { 
             	variableValues.put(namevar, x);
+           		}
+           	  else if ((x==-1)&&(vparam.toString()!="")) {
+           	    variableValues.put(namevar, vparam);
+           	  }
           	}
         } else {
             System.out.println(salida="Ya existe una variable asociada con ese nombre");
         }
-        comando = "(defvar " + namevar + " " + Integer.toString(x) + ")";
+        if (x==-1) { 
+        comando = "(defvar " + namevar + " " + vparam.toString() + ")"; }
+        if (vparam=="") {
+        comando = "(defvar " + namevar + " " + Integer.toString(x) + ")"; }
     }
   	 // Reasignar variables
- 	| <EQUAL> namevar=var() x=num()
+ 	| <EQUAL> namevar=var() (x=num()|vparam=direction()|vparam=orientation()|vparam=var())
   	{
         if (variableValues.containsKey(namevar)) {
             if(execute==true) { 
+          	  if ((x!=-1)&&(vparam.toString()=="")) { 
             	variableValues.put(namevar, x);
+           		}
+           	  else if ((x==-1)&&(vparam.toString()!="")) {
+           	    variableValues.put(namevar, vparam);
+           	  }
           	}
         } else {
             System.out.println(salida="No existe una variable asociada con ese nombre");
         }
-        comando = "(= " + namevar + " " + Integer.toString(x) + ")";
+        if (x==-1) { 
+        comando = "(= " + namevar + " " + vparam.toString() + ")"; }
+        if (vparam=="") {
+        comando = "(= " + namevar + " " + Integer.toString(x) + ")"; }
     }
    	 // moverse
  	| <MOVE> x=numvar()
@@ -655,32 +681,35 @@ String commandprotocol(boolean execute) :
   	  	if(execute==true) { 
         	world.moveForward(x,false);salida = "Command: move ";
         }
-        comando = "(move " + Integer.toString(x) + ")";
+        if (vparam=="") {
+        comando = "(move " + Integer.toString(x) + ")"; }
     }
+	  
    	 // saltar
  	| <HOP> x=numvar()
   	{
   	 	if(execute==true) { 
         	world.moveForward(x,true);salida = "Command: skip ";
         }
-        comando = "(skip " + Integer.toString(x) + ")";
+        comando = "(skip " + Integer.toString(x) + ")"; }{
+        
     }
 
 	// Girar
-	|<TURN> direction = turn()
+	|<TURN> (direction = turn()|vparam=var())
     {
-        if (direction.equals(":right")) {
+        if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
           	if(execute==true) { 
             world.turnRight(); 
             salida = "Turn right";
          	 }
-        } else if (direction.equals(":around")) {
+        } else if (direction.equals(":around")||variableValues.get(vparam).equals(":around")) {
          	if(execute==true) {
             world.turnRight(); 
             world.turnRight(); 
             salida = "Turn around";
             }
-        } else if (direction.equals(":left")) {
+        } else if (direction.equals(":left")||variableValues.get(vparam).equals(":left")) {
           	if(execute==true) {
             world.turnRight(); 
             world.turnRight(); 
@@ -690,28 +719,32 @@ String commandprotocol(boolean execute) :
         } else { 
             salida = "Not valid"; 
         }
-        comando = "(turn " + direction + ")";
+        if (direction=="") { 
+        comando = "(turn " + vparam.toString() + ")"; }
+        if (vparam=="") {
+        comando = "(turn " + direction + ")"; }
     }
-	// Mirar 
-	|	 <FACE>  direccion = orientation()
+
+    // Mirar 
+	|	 <FACE>  (direccion = orientation()|vparam=var())
     {
        		if(execute==true) {
-	            if (direccion.equals(":north")) {
+	            if (direccion.equals(":north")||variableValues.get(vparam).equals(":north")) {
 	                while (!world.facingNorth()) { 
 	                    world.turnRight(); 
 	                }
 	                salida = "facing north";
-	            } else if (direccion.equals(":south")) {
+	            } else if (direccion.equals(":south")||variableValues.get(vparam).equals(":south")) {
 	                while (!world.facingSouth()) { 
 	                    world.turnRight(); 
 	                }
 	                salida = "facing south";
-	            } else if (direccion.equals(":west")) {
+	            } else if (direccion.equals(":west")||variableValues.get(vparam).equals(":west")) {
 	                while (!world.facingWest()) { 
 	                    world.turnRight(); 
 	                }
 	                salida = "facing west";
-	            } else if (direccion.equals(":east")) {
+	            } else if (direccion.equals(":east")||variableValues.get(vparam).equals(":east")) {
 	                while (!world.facingEast()) { 
 	                    world.turnRight(); 
 	                }
@@ -720,61 +753,68 @@ String commandprotocol(boolean execute) :
 	                salida = "Non valid command";
 	            }
 	      }
-	      comando = "(face " + direccion + ")";
+	      if (direccion=="") { 
+        comando = "(face " + vparam.toString() + ")"; }
+        if (vparam=="") {
+        comando = "(face " + direction + ")"; }
     }
 	// Moverse en una direccion 
-	    |  < MOVEDIR> x=numvar() direction = direction(){
+	    |  < MOVEDIR> x=numvar() (direction = direction()|vparam=var()){
 	      if(execute==true) {
-		    if (direction.equals(":right")) {
+		    if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
 		        world.turnRight();
 		        world.moveForward(x,false);
 		        world.turnRight();world.turnRight();world.turnRight();
 		        salida = "Move";
-		    } else if (direction.equals(":back")) {
+		    } else if (direction.equals(":back")||variableValues.get(vparam).equals(":back")) {
 		        world.turnRight();world.turnRight();
 		        world.moveForward(x,false);
 		        world.turnRight();world.turnRight();
 		        salida = "Move";
-		    } else if (direction.equals(":left")) {
+		    } else if (direction.equals(":left")||variableValues.get(vparam).equals(":left")) {
 		        world.turnRight();world.turnRight();world.turnRight();
 		        world.moveForward(x,false);
 		        world.turnRight();
 		        salida = "Move";
-		    } else if (direction.equals(":front")) {
+		    } else if (direction.equals(":front")||variableValues.get(vparam).equals(":front")) {
 		        world.moveForward(x,false);
 		        salida = "Move";
 		    } else {
 		        salida = "Non valid direction";
 		    }
 		 }
-		 comando = "(move-dir " + Integer.toString(x) + " " + direction + ")";
+		 if (direction=="") { 
+        comando = "(move-dir " + Integer.toString(x) + " " + vparam.toString() + ")"; }
+        if (vparam=="") {
+        comando = "(move-dir " + Integer.toString(x) + " " + direction + ")"; }
+		 
 	}
 		  
 	// Move face
-	    |  < MOVEFACE> x=numvar() direccion= orientation(){
+	    |  < MOVEFACE> x=numvar() (direccion= orientation()|vparam=var()){
 
 	      if(execute==true) {
-            if (direccion.equals(":north")) {
+            if (direccion.equals(":north")||variableValues.get(vparam).equals(":north")) {
                 while (!world.facingNorth()) { 
                     world.turnRight(); 
                 }
                 world.moveForward(x,false);salida = "Command: Moveforward ";
                 
                 salida = "facing north";
-            } else if (direccion.equals(":south")) {
+            } else if (direccion.equals(":south")||variableValues.get(vparam).equals(":south")) {
                 while (!world.facingSouth()) { 
                     world.turnRight(); 
                 }
                 world.moveForward(x,false);salida = "Command: Moveforward ";
                 
            
-            } else if (direccion.equals(":west")) {
+            } else if (direccion.equals(":west")||variableValues.get(vparam).equals(":west")) {
                 while (!world.facingWest()) { 
                     world.turnRight(); 
                 }
                 world.moveForward(x,false);salida = "Command: Moveforward ";
                 
-            } else if (direccion.equals(":east")) {
+            } else if (direccion.equals(":east")||variableValues.get(vparam).equals(":east")) {
                 while (!world.facingEast()) { 
                     world.turnRight(); 
                 }
@@ -783,7 +823,10 @@ String commandprotocol(boolean execute) :
             } else {
                 salida = "Non valid command";
             }
-            comando = "(move-face " + Integer.toString(x) + " " + direccion + ")";
+        if (direccion=="") { 
+        	comando = "(move-face " + Integer.toString(x) + " " + vparam.toString() + ")"; }
+        if (vparam=="") {
+        comando = "(move-face " + Integer.toString(x) + " " + direccion + ")"; }
          }
          
         }
@@ -796,26 +839,26 @@ String commandprotocol(boolean execute) :
 
 		    |
 		    { String direcciones = ""; }
-		    <RUNDIRS> (direction =direction(){
+		    <RUNDIRS> (direction = direction()|vparam=var(){
 		      if(execute==true) {
 
-				    if (direction.equals(":right")) {
+				    if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
 				        world.turnRight();
 				        world.moveForward(1,false);
 				        salida = "move to the right";
 				        
 	
-				    } else if (direction.equals(":back")) {
+				    } else if (direction.equals(":back")||variableValues.get(vparam).equals(":back")) {
 				        world.turnRight();world.turnRight();
 				        world.moveForward(1,false);
 				        salida = "move to the back";
 	
-				    } else if (direction.equals(":left")) {
+				    } else if (direction.equals(":left")||variableValues.get(vparam).equals(":left")) {
 				        world.turnRight();world.turnRight();world.turnRight();
 				        world.moveForward(1,false);
 				        salida = "move to the left";
 	
-				    } else if (direction.equals(":front")) {
+				    } else if (direction.equals(":front")||variableValues.get(vparam).equals(":front")) {
 				        world.moveForward(1,false);
 				        salida = "move to the front";
 	
@@ -846,10 +889,16 @@ String commandprotocol(boolean execute) :
 			                salida = "facing east";
 			          }
 		     }
-		     direcciones += " " + direction + " ";
+		if (direction=="") { 
+        	direcciones += " " + vparam.toString() + " "; }
+        if (vparam=="") {
+        	direcciones += " " + direction + " "; }
+         
+		     
 		    }
 		    )+
 		    { comando = "(run-dirs " + direcciones + ")"; }
+	
 		    // put protocol
 			|  <PUT> put(execute)
 			{ comando = put(execute); }
@@ -859,24 +908,22 @@ String commandprotocol(boolean execute) :
 	)
 	< RBRACKET >
 	{
+	  instrucciones.add(comando);
 	  return comando;
 	}
 }
 
 
 //Aqui se establece la estructura de un condicional, hasta el momento solo funciona con comandos
-String conditionalprotocol():
+void conditionalprotocol():
 {}
 {
   < LBRACKET >
   <IF>
   <LBRACKET>condition()<RBRACKET>
-  <LBRACKET>commandprotocol(this.boolexecuter)<RBRACKET>
-  <LBRACKET>commandprotocol(!this.boolexecuter)<RBRACKET>
+  commandBlock(this.boolexecuter)
+  commandBlock(!this.boolexecuter)
   < RBRACKET >
-  {
-    return "Condicional";
-  }
 }
 	
 // Condición que interpreta un condicional y un loop
@@ -894,7 +941,7 @@ void condition():
     )
     |
     (
-    <NOT> <RBRACKET> (
+    <NOT> <LBRACKET> (
         facing(true)
         | zero(true)
         | canput(true)
@@ -902,7 +949,7 @@ void condition():
         | canmove(true)
         | blocked(true)
     )
-    <LBRACKET>
+    <RBRACKET>
     )
 }
 
@@ -1026,11 +1073,7 @@ void canmove(boolean not):
 		  	else if (wanted == 2) {
 		  	  pos.setLocation(x+1,y);}
 		  	else if (wanted == 3) {
-		  	  pos.setLocation(x-1,y);}
-            	System.out.println("Trueval canJumpInDir: "+x);
-            	System.out.println("Trueval canJumpInDir: "+y);
-            	System.out.println("Trueval canJumpInDir: "+world.getN());
-            	System.out.println("Trueval canJumpInDir: "+pos);		  	  
+		  	  pos.setLocation(x-1,y);}	  	  
        		 if (pos.x >world.getN() || pos.y >world.getN() || pos.x<1 || pos.y<1) {
             	this.boolexecuter = false;
 
@@ -1041,11 +1084,7 @@ void canmove(boolean not):
        		 
 		    if (not == true) {
             	this.boolexecuter = !this.boolexecuter;
-       		 }
-
-		  	System.out.println("Trueval canJumpInDir: "+this.boolexecuter);
-
-		
+       		 }		
 		  }
 	}
 
@@ -1080,11 +1119,7 @@ void blocked(boolean not):
 		  	else if (wanted == 2) {
 		  	  pos.setLocation(x+1,y);}
 		  	else if (wanted == 3) {
-		  	  pos.setLocation(x-1,y);}
-            	System.out.println("Trueval canJumpInDir: "+x);
-            	System.out.println("Trueval canJumpInDir: "+y);
-            	System.out.println("Trueval canJumpInDir: "+world.getN());
-            	System.out.println("Trueval canJumpInDir: "+pos);		  	  
+		  	  pos.setLocation(x-1,y);}	  	  
        		 if (pos.x >world.getN() || pos.y >world.getN() || pos.x<1 || pos.y<1) {
             	this.boolexecuter = true;
 
@@ -1104,41 +1139,50 @@ void blocked(boolean not):
 	}
 	
 /* Estructura de función es (defun nombre (params) (c1)(c2)...(cn))*/
-String funcion():
+String funcion() throws Error:
 {
   String nombreFun;
   String parametro;
   ArrayList<String> parametros = new ArrayList<String>();
   ArrayList<String> comandos = new ArrayList<String>();
+  dentroFuncion = true;
 }
 {
   < LBRACKET >
   < DEFUN > nombreFun = nombreFuncion()
   {
-    procNames.add(nombreFun);
+    if (!procNames.contains(nombreFun)) {
+      procNames.add(nombreFun);
+    }
+    else {
+      throw new Error("Ya está definida una función con ese nombre");
+    }
   }
-  parametros = listaParametros()
+  (    parametros = listaParametros()
+  )
   {
     procParams.put(nombreFun, parametros);
     System.out.println(procParams);
   }
-  < LBRACKET >
     (
     commandBlock(false)
     {
-      comandos.add(token_source.toString());
+      for (String s: instrucciones) {
+        comandos.add(s);
+      }
     }
   )+
   {
     System.out.println(comandos);
-  }
-  < RBRACKET >
-  {
     procBloques.put(nombreFun, comandos);
     System.out.println(procBloques);
   }
   < RBRACKET >
   {
+    for (String p: parametros) {
+      variablesAuxiliares.remove(p);
+    }
+    dentroFuncion = false;
     return "funcion";
   }
 }
@@ -1150,14 +1194,15 @@ ArrayList<String> listaParametros():
 }
 {
   < LBRACKET >
-  v = var()
-  {
-    variablesAuxiliares.add(v);
-    params.add(v);
-  }
   (v = var()
   {
     variablesAuxiliares.add(v);
+    variableValues.put(v,v);
+    if (!diccionarioAuxiliar.containsKey(v))
+    {
+    contadorAuxiliar-=1;
+    diccionarioAuxiliar.put(v, contadorAuxiliar);
+    }
     params.add(v);
   })*
   < RBRACKET >
@@ -1166,6 +1211,23 @@ ArrayList<String> listaParametros():
   }
 }
 	
+void repeat():
+{
+  int n;
+}
+{
+  < LBRACKET >
+  < REPEAT > n=numvar() (commandBlock(true)
+  {
+    while (n > 0) {
+      commandBlock(true);
+      n--;
+    }
+    })+
+  
+  < RBRACKET >
+}
+
 
 // TODO
 // =================================================================================
