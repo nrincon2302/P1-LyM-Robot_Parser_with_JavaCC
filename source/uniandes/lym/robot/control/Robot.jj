@@ -636,7 +636,7 @@ String commandprotocol(boolean execute) :
   	<LBRACKET>
     // Crear variables
     (
-      <DEFVAR> namevar=var() (x=num()|vparam=direction()|vparam=orientation()|vparam=var())
+      <DEFVAR> namevar=var() (x=num()|vparam=direction()|vparam=turn()|vparam=orientation()|vparam=var())
     {
         if (!variableValues.containsKey(namevar)) {
           	if(execute==true) {
@@ -644,7 +644,15 @@ String commandprotocol(boolean execute) :
             	variableValues.put(namevar, x);
            		}
            	  else if ((x==-1)&&(vparam.toString()!="")) {
-           	    variableValues.put(namevar, vparam);
+           	    variableValues.put(namevar, vparam.toString());
+           	  }
+          	}
+          	else {
+          	  if ((x!=-1)&&(vparam.toString()=="")) { 
+            	variablesAuxiliares.add(namevar);
+           		}
+           	  else if ((x==-1)&&(vparam.toString()!="")) {
+           	    variablesAuxiliares.add(vparam.toString());
            	  }
           	}
         } else {
@@ -656,7 +664,7 @@ String commandprotocol(boolean execute) :
         comando = "(defvar " + namevar + " " + Integer.toString(x) + ")"; }
     }
   	 // Reasignar variables
- 	| <EQUAL> namevar=var() (x=num()|vparam=direction()|vparam=orientation()|vparam=var())
+ 	| <EQUAL> namevar=var() (x=num()|vparam=direction()|vparam=turn()|vparam=orientation()|vparam=var())
   	{
         if (variableValues.containsKey(namevar)) {
             if(execute==true) { 
@@ -1179,9 +1187,7 @@ String funcion() throws Error:
   }
   < RBRACKET >
   {
-    for (String p: parametros) {
-      variablesAuxiliares.remove(p);
-    }
+    variablesAuxiliares.clear();
     dentroFuncion = false;
     return "funcion";
   }
