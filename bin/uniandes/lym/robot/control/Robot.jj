@@ -1,3 +1,7 @@
+/* Proyecto 1 LyM. Realizado por:
+Carol Florido - 202111430
+Nicolás Rincón - 202021963 */
+
 /*
 Gramatica para el Robot:
 Autor: Alejandro Arango
@@ -247,10 +251,10 @@ int numvar() throws Error:
 		try 
 		{
 			name = String.valueOf(token.image);
-			if (variablesAuxiliares.contains(name)) {
-			  value = (int)diccionarioAuxiliar.get(name);
-			} else { 
+			if (!variablesAuxiliares.contains(name)) {
 			  value = (int)variableValues.get(name);
+			} else { 
+			  value = (int)diccionarioAuxiliar.get(name);
 			}
 		} 
 		catch (Exception e) 
@@ -608,6 +612,7 @@ void commandBlock(boolean execute) :
 	| LOOKAHEAD(2) conditionalprotocol()
 	| LOOKAHEAD(2) funcion()
 	| LOOKAHEAD(2) listaComandos(execute)
+	| LOOKAHEAD(2) repeat()
 }
 
 
@@ -706,6 +711,7 @@ String commandprotocol(boolean execute) :
 	// Girar
 	|<TURN> (direction = turn()|vparam=var())
     {
+      if (variableValues.containsKey(vparam)) { 
         if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
           	if(execute==true) { 
             world.turnRight(); 
@@ -727,6 +733,29 @@ String commandprotocol(boolean execute) :
         } else { 
             salida = "Not valid"; 
         }
+      } else {
+        if (direction.equals(":right")) {
+          	if(execute==true) { 
+            world.turnRight(); 
+            salida = "Turn right";
+         	 }
+        } else if (direction.equals(":around")) {
+         	if(execute==true) {
+            world.turnRight(); 
+            world.turnRight(); 
+            salida = "Turn around";
+            }
+        } else if (direction.equals(":left")) {
+          	if(execute==true) {
+            world.turnRight(); 
+            world.turnRight(); 
+            world.turnRight(); 
+            salida = "Turn left";
+          	}
+        } else { 
+            salida = "Not valid"; 
+        }
+      }
         if (direction=="") { 
         comando = "(turn " + vparam.toString() + ")"; }
         if (vparam=="") {
@@ -736,6 +765,7 @@ String commandprotocol(boolean execute) :
     // Mirar 
 	|	 <FACE>  (direccion = orientation()|vparam=var())
     {
+      if (variableValues.containsKey(vparam)) {
        		if(execute==true) {
 	            if (direccion.equals(":north")||variableValues.get(vparam).equals(":north")) {
 	                while (!world.facingNorth()) { 
@@ -761,6 +791,35 @@ String commandprotocol(boolean execute) :
 	                salida = "Non valid command";
 	            }
 	      }
+	    }
+	    else {
+	      if(execute==true) {
+	            if (direccion.equals(":north")) {
+	                while (!world.facingNorth()) { 
+	                    world.turnRight(); 
+	                }
+	                salida = "facing north";
+	            } else if (direccion.equals(":south")) {
+	                while (!world.facingSouth()) { 
+	                    world.turnRight(); 
+	                }
+	                salida = "facing south";
+	            } else if (direccion.equals(":west")) {
+	                while (!world.facingWest()) { 
+	                    world.turnRight(); 
+	                }
+	                salida = "facing west";
+	            } else if (direccion.equals(":east")) {
+	                while (!world.facingEast()) { 
+	                    world.turnRight(); 
+	                }
+	                salida = "facing east";
+	            } else {
+	                salida = "Non valid command";
+	            }
+	          }
+	        }
+	      
 	      if (direccion=="") { 
         comando = "(face " + vparam.toString() + ")"; }
         if (vparam=="") {
@@ -768,6 +827,7 @@ String commandprotocol(boolean execute) :
     }
 	// Moverse en una direccion 
 	    |  < MOVEDIR> x=numvar() (direction = direction()|vparam=var()){
+	   if (variableValues.containsKey(vparam)) {   
 	      if(execute==true) {
 		    if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
 		        world.turnRight();
@@ -791,6 +851,31 @@ String commandprotocol(boolean execute) :
 		        salida = "Non valid direction";
 		    }
 		 }
+	} else {
+	  if(execute==true) {
+		    if (direction.equals(":right")) {
+		        world.turnRight();
+		        world.moveForward(x,false);
+		        world.turnRight();world.turnRight();world.turnRight();
+		        salida = "Move";
+		    } else if (direction.equals(":back")) {
+		        world.turnRight();world.turnRight();
+		        world.moveForward(x,false);
+		        world.turnRight();world.turnRight();
+		        salida = "Move";
+		    } else if (direction.equals(":left")) {
+		        world.turnRight();world.turnRight();world.turnRight();
+		        world.moveForward(x,false);
+		        world.turnRight();
+		        salida = "Move";
+		    } else if (direction.equals(":front")) {
+		        world.moveForward(x,false);
+		        salida = "Move";
+		    } else {
+		        salida = "Non valid direction";
+		    }
+		 }
+	}
 		 if (direction=="") { 
         comando = "(move-dir " + Integer.toString(x) + " " + vparam.toString() + ")"; }
         if (vparam=="") {
@@ -800,7 +885,7 @@ String commandprotocol(boolean execute) :
 		  
 	// Move face
 	    |  < MOVEFACE> x=numvar() (direccion= orientation()|vparam=var()){
-
+		if (variableValues.containsKey(vparam)) {
 	      if(execute==true) {
             if (direccion.equals(":north")||variableValues.get(vparam).equals(":north")) {
                 while (!world.facingNorth()) { 
@@ -831,11 +916,45 @@ String commandprotocol(boolean execute) :
             } else {
                 salida = "Non valid command";
             }
+          }
+        } else {
+          if(execute==true) {
+            if (direccion.equals(":north")) {
+                while (!world.facingNorth()) { 
+                    world.turnRight(); 
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+                
+                salida = "facing north";
+            } else if (direccion.equals(":south")) {
+                while (!world.facingSouth()) { 
+                    world.turnRight(); 
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+                
+           
+            } else if (direccion.equals(":west")) {
+                while (!world.facingWest()) { 
+                    world.turnRight(); 
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+                
+            } else if (direccion.equals(":east")) {
+                while (!world.facingEast()) { 
+                    world.turnRight(); 
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+                
+            } else {
+                salida = "Non valid command";
+            }
+          }
+        }
         if (direccion=="") { 
         	comando = "(move-face " + Integer.toString(x) + " " + vparam.toString() + ")"; }
         if (vparam=="") {
         comando = "(move-face " + Integer.toString(x) + " " + direccion + ")"; }
-         }
+         
          
         }
      // null 
@@ -848,6 +967,7 @@ String commandprotocol(boolean execute) :
 		    |
 		    { String direcciones = ""; }
 		    <RUNDIRS> (direction = direction()|vparam=var(){
+		if (variableValues.containsKey(vparam)) {      
 		      if(execute==true) {
 
 				    if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
@@ -897,6 +1017,57 @@ String commandprotocol(boolean execute) :
 			                salida = "facing east";
 			          }
 		     }
+		   } else {
+		     if(execute==true) {
+
+				    if (direction.equals(":right")) {
+				        world.turnRight();
+				        world.moveForward(1,false);
+				        salida = "move to the right";
+				        
+	
+				    } else if (direction.equals(":back")) {
+				        world.turnRight();world.turnRight();
+				        world.moveForward(1,false);
+				        salida = "move to the back";
+	
+				    } else if (direction.equals(":left")) {
+				        world.turnRight();world.turnRight();world.turnRight();
+				        world.moveForward(1,false);
+				        salida = "move to the left";
+	
+				    } else if (direction.equals(":front")) {
+				        world.moveForward(1,false);
+				        salida = "move to the front";
+	
+				    } else {
+				        salida = "Non valid direction";
+				    }
+	
+	
+				    if (y==0) {
+			                while (!world.facingNorth()) { 
+			                    world.turnRight(); 
+			                }
+			                salida = "facing north";
+			            } else if (y==1) {
+			                while (!world.facingSouth()) { 
+			                    world.turnRight(); 
+			                }
+			                salida = "facing south";
+			            } else if (y==2) {
+			                while (!world.facingWest()) { 
+			                    world.turnRight(); 
+			                }
+			                salida = "facing west";
+			            } else if (y==3) {
+			                while (!world.facingEast()) { 
+			                    world.turnRight(); 
+			                }
+			                salida = "facing east";
+			          }
+		     }
+		   }
 		if (direction=="") { 
         	direcciones += " " + vparam.toString() + " "; }
         if (vparam=="") {
@@ -1187,7 +1358,9 @@ String funcion() throws Error:
   }
   < RBRACKET >
   {
-    variablesAuxiliares.clear();
+    for (String p: parametros) {
+      variablesAuxiliares.remove(p);
+    }
     dentroFuncion = false;
     return "funcion";
   }
@@ -1220,18 +1393,23 @@ ArrayList<String> listaParametros():
 void repeat():
 {
   int n;
+  ArrayList<String> comandos = new ArrayList<String>();
 }
 {
   < LBRACKET >
-  < REPEAT > n=numvar() (commandBlock(true)
+  < REPEAT > n=numvar() (commandBlock(false)
+  	{
+      for (String s: instrucciones) {
+        comandos.add(s);
+      }
+    })+
+  < RBRACKET >
   {
     while (n > 0) {
-      commandBlock(true);
+      ejecutar_comandos(comandos, null);
       n--;
     }
-    })+
-  
-  < RBRACKET >
+}
 }
 
 
@@ -1258,3 +1436,72 @@ int getNumCardinal(String o):
   	return numCardinal;
   	}
  }
+
+void ejecutar_comandos(ArrayList<String> comandos, String funcion):
+// Usado para ejecución de bloques almacenados en memoria -> Funciones y Ciclos
+{
+  ArrayList<String> parametros = new ArrayList<>();
+}
+{
+  {
+    
+    for (String comando : comandos)
+    {
+      String[] separado = comando.split(" ");
+      // Caso Move
+      if (separado[0].equals("(move"))
+      {
+        String valor = separado[1].substring(0,1);
+        world.moveForward(Integer.valueOf(valor),false);
+      }
+      // Caso Skip
+      else if (separado[0].equals("(skip"))
+      {
+        String valor = separado[1].substring(0,1);
+        world.moveForward(Integer.valueOf(valor),true);
+      }
+      // Caso Turn
+      else if (separado[0].equals("(turn"))
+      {
+        String valor = separado[1];
+        if (valor.equals(":right)")) {
+            world.turnRight();
+            
+        } else if (valor.equals(":around)")) {
+            world.turnRight(); 
+            world.turnRight();
+            
+        } else if (valor.equals(":left)")) {
+            world.turnRight(); 
+            world.turnRight(); 
+            world.turnRight();
+        }
+      }
+      // Caso Face
+      else if (separado[0].equals("(face"))
+      {
+        String valor = separado[1];
+        if (valor.equals(":north)")) {
+            while (!world.facingNorth()) { 
+	                    world.turnRight(); 
+	                }
+            
+        } else if (valor.equals(":south)")) {
+            while (!world.facingSouth()) { 
+	                    world.turnRight(); 
+	                }
+            
+        } else if (valor.equals(":west)")) {
+            while (!world.facingWest()) { 
+	                    world.turnRight(); 
+	                }
+        } else if (valor.equals(":east)")) {
+            while (!world.facingEast()) { 
+	                    world.turnRight(); 
+	                }
+        }
+        // Acá irian otros casos
+      }
+    }
+  }
+}

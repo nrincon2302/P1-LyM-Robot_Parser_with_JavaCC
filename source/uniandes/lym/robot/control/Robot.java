@@ -132,10 +132,10 @@ try
 try
                 {
                         name = String.valueOf(token.image);
-                        if (variablesAuxiliares.contains(name)) {
-                          value = (int)diccionarioAuxiliar.get(name);
-                        } else {
+                        if (!variablesAuxiliares.contains(name)) {
                           value = (int)variableValues.get(name);
+                        } else {
+                          value = (int)diccionarioAuxiliar.get(name);
                         }
                 }
                 catch (Exception e)
@@ -551,6 +551,8 @@ if(execute==true) {
       funcion();
     } else if (jj_2_4(2)) {
       listaComandos(execute);
+    } else if (jj_2_5(2)) {
+      repeat();
     } else {
       jj_consume_token(-1);
       throw new ParseException();
@@ -738,7 +740,8 @@ if(execute==true) {
         jj_consume_token(-1);
         throw new ParseException();
       }
-if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
+if (variableValues.containsKey(vparam)) {
+        if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
                 if(execute==true) {
             world.turnRight();
             salida = "Turn right";
@@ -759,6 +762,29 @@ if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
         } else {
             salida = "Not valid";
         }
+      } else {
+        if (direction.equals(":right")) {
+                if(execute==true) {
+            world.turnRight();
+            salida = "Turn right";
+                 }
+        } else if (direction.equals(":around")) {
+                if(execute==true) {
+            world.turnRight();
+            world.turnRight();
+            salida = "Turn around";
+            }
+        } else if (direction.equals(":left")) {
+                if(execute==true) {
+            world.turnRight();
+            world.turnRight();
+            world.turnRight();
+            salida = "Turn left";
+                }
+        } else {
+            salida = "Not valid";
+        }
+      }
         if (direction=="") {
         comando = "(turn " + vparam.toString() + ")"; }
         if (vparam=="") {
@@ -784,7 +810,8 @@ if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
         jj_consume_token(-1);
         throw new ParseException();
       }
-if(execute==true) {
+if (variableValues.containsKey(vparam)) {
+                if(execute==true) {
                     if (direccion.equals(":north")||variableValues.get(vparam).equals(":north")) {
                         while (!world.facingNorth()) {
                             world.turnRight();
@@ -809,6 +836,35 @@ if(execute==true) {
                         salida = "Non valid command";
                     }
               }
+            }
+            else {
+              if(execute==true) {
+                    if (direccion.equals(":north")) {
+                        while (!world.facingNorth()) {
+                            world.turnRight();
+                        }
+                        salida = "facing north";
+                    } else if (direccion.equals(":south")) {
+                        while (!world.facingSouth()) {
+                            world.turnRight();
+                        }
+                        salida = "facing south";
+                    } else if (direccion.equals(":west")) {
+                        while (!world.facingWest()) {
+                            world.turnRight();
+                        }
+                        salida = "facing west";
+                    } else if (direccion.equals(":east")) {
+                        while (!world.facingEast()) {
+                            world.turnRight();
+                        }
+                        salida = "facing east";
+                    } else {
+                        salida = "Non valid command";
+                    }
+                  }
+                }
+
               if (direccion=="") {
         comando = "(face " + vparam.toString() + ")"; }
         if (vparam=="") {
@@ -835,7 +891,8 @@ if(execute==true) {
         jj_consume_token(-1);
         throw new ParseException();
       }
-if(execute==true) {
+if (variableValues.containsKey(vparam)) {
+              if(execute==true) {
                     if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
                         world.turnRight();
                         world.moveForward(x,false);
@@ -858,6 +915,31 @@ if(execute==true) {
                         salida = "Non valid direction";
                     }
                  }
+        } else {
+          if(execute==true) {
+                    if (direction.equals(":right")) {
+                        world.turnRight();
+                        world.moveForward(x,false);
+                        world.turnRight();world.turnRight();world.turnRight();
+                        salida = "Move";
+                    } else if (direction.equals(":back")) {
+                        world.turnRight();world.turnRight();
+                        world.moveForward(x,false);
+                        world.turnRight();world.turnRight();
+                        salida = "Move";
+                    } else if (direction.equals(":left")) {
+                        world.turnRight();world.turnRight();world.turnRight();
+                        world.moveForward(x,false);
+                        world.turnRight();
+                        salida = "Move";
+                    } else if (direction.equals(":front")) {
+                        world.moveForward(x,false);
+                        salida = "Move";
+                    } else {
+                        salida = "Non valid direction";
+                    }
+                 }
+        }
                  if (direction=="") {
         comando = "(move-dir " + Integer.toString(x) + " " + vparam.toString() + ")"; }
         if (vparam=="") {
@@ -884,7 +966,8 @@ if(execute==true) {
         jj_consume_token(-1);
         throw new ParseException();
       }
-if(execute==true) {
+if (variableValues.containsKey(vparam)) {
+              if(execute==true) {
             if (direccion.equals(":north")||variableValues.get(vparam).equals(":north")) {
                 while (!world.facingNorth()) {
                     world.turnRight();
@@ -914,11 +997,44 @@ if(execute==true) {
             } else {
                 salida = "Non valid command";
             }
+          }
+        } else {
+          if(execute==true) {
+            if (direccion.equals(":north")) {
+                while (!world.facingNorth()) {
+                    world.turnRight();
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+
+                salida = "facing north";
+            } else if (direccion.equals(":south")) {
+                while (!world.facingSouth()) {
+                    world.turnRight();
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+
+
+            } else if (direccion.equals(":west")) {
+                while (!world.facingWest()) {
+                    world.turnRight();
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+
+            } else if (direccion.equals(":east")) {
+                while (!world.facingEast()) {
+                    world.turnRight();
+                }
+                world.moveForward(x,false);salida = "Command: Moveforward ";
+
+            } else {
+                salida = "Non valid command";
+            }
+          }
+        }
         if (direccion=="") {
                 comando = "(move-face " + Integer.toString(x) + " " + vparam.toString() + ")"; }
         if (vparam=="") {
         comando = "(move-face " + Integer.toString(x) + " " + direccion + ")"; }
-         }
       break;
       }
     case NULL:{
@@ -941,7 +1057,8 @@ String direcciones = "";
           }
         case NAME:{
           vparam = var();
-if(execute==true) {
+if (variableValues.containsKey(vparam)) {
+                      if(execute==true) {
 
                                     if (direction.equals(":right")||variableValues.get(vparam).equals(":right")) {
                                         world.turnRight();
@@ -990,6 +1107,57 @@ if(execute==true) {
                                         salida = "facing east";
                                   }
                      }
+                   } else {
+                     if(execute==true) {
+
+                                    if (direction.equals(":right")) {
+                                        world.turnRight();
+                                        world.moveForward(1,false);
+                                        salida = "move to the right";
+
+
+                                    } else if (direction.equals(":back")) {
+                                        world.turnRight();world.turnRight();
+                                        world.moveForward(1,false);
+                                        salida = "move to the back";
+
+                                    } else if (direction.equals(":left")) {
+                                        world.turnRight();world.turnRight();world.turnRight();
+                                        world.moveForward(1,false);
+                                        salida = "move to the left";
+
+                                    } else if (direction.equals(":front")) {
+                                        world.moveForward(1,false);
+                                        salida = "move to the front";
+
+                                    } else {
+                                        salida = "Non valid direction";
+                                    }
+
+
+                                    if (y==0) {
+                                        while (!world.facingNorth()) {
+                                            world.turnRight();
+                                        }
+                                        salida = "facing north";
+                                    } else if (y==1) {
+                                        while (!world.facingSouth()) {
+                                            world.turnRight();
+                                        }
+                                        salida = "facing south";
+                                    } else if (y==2) {
+                                        while (!world.facingWest()) {
+                                            world.turnRight();
+                                        }
+                                        salida = "facing west";
+                                    } else if (y==3) {
+                                        while (!world.facingEast()) {
+                                            world.turnRight();
+                                        }
+                                        salida = "facing east";
+                                  }
+                     }
+                   }
                 if (direction=="") {
                 direcciones += " " + vparam.toString() + " "; }
         if (vparam=="") {
@@ -1352,7 +1520,9 @@ System.out.println(comandos);
     procBloques.put(nombreFun, comandos);
     System.out.println(procBloques);
     jj_consume_token(RBRACKET);
-variablesAuxiliares.clear();
+for (String p: parametros) {
+      variablesAuxiliares.remove(p);
+    }
     dentroFuncion = false;
     {if ("" != null) return "funcion";}
     throw new Error("Missing return statement in function");
@@ -1388,16 +1558,16 @@ variablesAuxiliares.add(v);
 }
 
   final public void repeat() throws ParseException {int n;
+  ArrayList<String> comandos = new ArrayList<String>();
     jj_consume_token(LBRACKET);
     jj_consume_token(REPEAT);
     n = numvar();
     label_7:
     while (true) {
-      commandBlock(true);
-while (n > 0) {
-      commandBlock(true);
-      n--;
-    }
+      commandBlock(false);
+for (String s: instrucciones) {
+        comandos.add(s);
+      }
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case LBRACKET:{
         ;
@@ -1409,6 +1579,10 @@ while (n > 0) {
       }
     }
     jj_consume_token(RBRACKET);
+while (n > 0) {
+      ejecutar_comandos(comandos, null);
+      n--;
+    }
 }
 
 // TODO
@@ -1428,6 +1602,67 @@ if (o.equals(":north")) {
           numCardinal = 3; }
         {if ("" != null) return numCardinal;}
     throw new Error("Missing return statement in function");
+}
+
+  final public void ejecutar_comandos(ArrayList<String> comandos, String funcion) throws ParseException {ArrayList<String> parametros = new ArrayList<>();
+for (String comando : comandos)
+    {
+      String[] separado = comando.split(" ");
+      // Caso Move
+      if (separado[0].equals("(move"))
+      {
+        String valor = separado[1].substring(0,1);
+        world.moveForward(Integer.valueOf(valor),false);
+      }
+      // Caso Skip
+      else if (separado[0].equals("(skip"))
+      {
+        String valor = separado[1].substring(0,1);
+        world.moveForward(Integer.valueOf(valor),true);
+      }
+      // Caso Turn
+      else if (separado[0].equals("(turn"))
+      {
+        String valor = separado[1];
+        if (valor.equals(":right)")) {
+            world.turnRight();
+
+        } else if (valor.equals(":around)")) {
+            world.turnRight();
+            world.turnRight();
+
+        } else if (valor.equals(":left)")) {
+            world.turnRight();
+            world.turnRight();
+            world.turnRight();
+        }
+      }
+      // Caso Face
+      else if (separado[0].equals("(face"))
+      {
+        String valor = separado[1];
+        if (valor.equals(":north)")) {
+            while (!world.facingNorth()) {
+                            world.turnRight();
+                        }
+
+        } else if (valor.equals(":south)")) {
+            while (!world.facingSouth()) {
+                            world.turnRight();
+                        }
+
+        } else if (valor.equals(":west)")) {
+            while (!world.facingWest()) {
+                            world.turnRight();
+                        }
+        } else if (valor.equals(":east)")) {
+            while (!world.facingEast()) {
+                            world.turnRight();
+                        }
+        }
+        // Acá irian otros casos
+      }
+    }
 }
 
   private boolean jj_2_1(int xla)
@@ -1462,173 +1697,194 @@ if (o.equals(":north")) {
     finally { jj_save(3, xla); }
   }
 
-  private boolean jj_3R_commandprotocol_911_28_22()
+  private boolean jj_2_5(int xla)
  {
-    if (jj_scan_token(PUT)) return true;
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return (!jj_3_5()); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(4, xla); }
+  }
+
+  private boolean jj_3R_commandprotocol_962_24_21()
+ {
+    if (jj_scan_token(NULL)) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_687_11_14()
+  private boolean jj_3R_commandprotocol_829_16_19()
+ {
+    if (jj_scan_token(MOVEDIR)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_692_11_15()
  {
     if (jj_scan_token(MOVE)) return true;
     return false;
   }
 
-  private boolean jj_3R_conditionalprotocol_929_3_9()
+  private boolean jj_3R_repeat_1400_3_12()
+ {
+    if (jj_scan_token(LBRACKET)) return true;
+    if (jj_scan_token(REPEAT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_644_7_13()
+ {
+    if (jj_scan_token(DEFVAR)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_641_9_8()
+ {
+    if (jj_scan_token(LBRACKET)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_commandprotocol_644_7_13()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_672_11_14()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_692_11_15()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_702_11_16()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_712_10_17()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_766_18_18()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_829_16_19()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_887_16_20()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_962_24_21()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_968_21_22()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_1082_28_23()) {
+    jj_scanpos = xsp;
+    if (jj_3R_commandprotocol_1085_28_24()) return true;
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_1085_28_24()
+ {
+    if (jj_scan_token(PICK)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_766_18_18()
+ {
+    if (jj_scan_token(FACE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_1082_28_23()
+ {
+    if (jj_scan_token(PUT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_672_11_14()
+ {
+    if (jj_scan_token(EQUAL)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_conditionalprotocol_1100_3_9()
  {
     if (jj_scan_token(LBRACKET)) return true;
     if (jj_scan_token(IF)) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_639_7_12()
+  private boolean jj_3R_commandprotocol_712_10_17()
  {
-    if (jj_scan_token(DEFVAR)) return true;
+    if (jj_scan_token(TURN)) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_636_9_8()
- {
-    if (jj_scan_token(LBRACKET)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_commandprotocol_639_7_12()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_667_11_13()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_687_11_14()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_697_11_15()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_707_10_16()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_737_18_17()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_770_16_18()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_802_16_19()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_843_24_20()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_849_21_21()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_911_28_22()) {
-    jj_scanpos = xsp;
-    if (jj_3R_commandprotocol_914_28_23()) return true;
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_770_16_18()
- {
-    if (jj_scan_token(MOVEDIR)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_funcion_1159_3_10()
+  private boolean jj_3R_funcion_1330_3_10()
  {
     if (jj_scan_token(LBRACKET)) return true;
     if (jj_scan_token(DEFUN)) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_849_21_21()
+  private boolean jj_3R_listaComandos_623_4_25()
  {
-    if (jj_scan_token(RUNDIRS)) return true;
+    if (jj_3R_commandprotocol_641_9_8()) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_843_24_20()
+  private boolean jj_3_5()
  {
-    if (jj_scan_token(NULL)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_667_11_13()
- {
-    if (jj_scan_token(EQUAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_802_16_19()
- {
-    if (jj_scan_token(MOVEFACE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_707_10_16()
- {
-    if (jj_scan_token(TURN)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_listaComandos_618_4_24()
- {
-    if (jj_3R_commandprotocol_636_9_8()) return true;
+    if (jj_3R_repeat_1400_3_12()) return true;
     return false;
   }
 
   private boolean jj_3_4()
  {
-    if (jj_3R_listaComandos_617_3_11()) return true;
+    if (jj_3R_listaComandos_622_3_11()) return true;
     return false;
   }
 
-  private boolean jj_3R_listaComandos_617_3_11()
+  private boolean jj_3R_listaComandos_622_3_11()
  {
     if (jj_scan_token(LBRACKET)) return true;
     Token xsp;
-    if (jj_3R_listaComandos_618_4_24()) return true;
+    if (jj_3R_listaComandos_623_4_25()) return true;
     while (true) {
       xsp = jj_scanpos;
-      if (jj_3R_listaComandos_618_4_24()) { jj_scanpos = xsp; break; }
+      if (jj_3R_listaComandos_623_4_25()) { jj_scanpos = xsp; break; }
     }
     return false;
   }
 
   private boolean jj_3_3()
  {
-    if (jj_3R_funcion_1159_3_10()) return true;
+    if (jj_3R_funcion_1330_3_10()) return true;
     return false;
   }
 
   private boolean jj_3_2()
  {
-    if (jj_3R_conditionalprotocol_929_3_9()) return true;
+    if (jj_3R_conditionalprotocol_1100_3_9()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_commandprotocol_887_16_20()
+ {
+    if (jj_scan_token(MOVEFACE)) return true;
     return false;
   }
 
   private boolean jj_3_1()
  {
-    if (jj_3R_commandprotocol_636_9_8()) return true;
+    if (jj_3R_commandprotocol_641_9_8()) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_697_11_15()
+  private boolean jj_3R_commandprotocol_702_11_16()
  {
     if (jj_scan_token(HOP)) return true;
     return false;
   }
 
-  private boolean jj_3R_commandprotocol_737_18_17()
+  private boolean jj_3R_commandprotocol_968_21_22()
  {
-    if (jj_scan_token(FACE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_commandprotocol_914_28_23()
- {
-    if (jj_scan_token(PICK)) return true;
+    if (jj_scan_token(RUNDIRS)) return true;
     return false;
   }
 
@@ -1656,7 +1912,7 @@ if (o.equals(":north")) {
 	private static void jj_la1_init_1() {
 	   jj_la1_1 = new int[] {0x80,0x80,0xa0000,0x0,0x0,0x0,0x80000,0x0,0x0,0x80,0xa0000,0xa0000,0x20000,0x20000,0x20000,0x20000,0x20000,0x20000,0x3f,0xfc00,0xfc00,0x1fc00,0x0,0x0,0x80,0x20000,0x80,};
 	}
-  final private JJCalls[] jj_2_rtns = new JJCalls[4];
+  final private JJCalls[] jj_2_rtns = new JJCalls[5];
   private boolean jj_rescan = false;
   private int jj_gc = 0;
 
@@ -1918,7 +2174,7 @@ if (o.equals(":north")) {
 
   private void jj_rescan_token() {
 	 jj_rescan = true;
-	 for (int i = 0; i < 4; i++) {
+	 for (int i = 0; i < 5; i++) {
 	   try {
 		 JJCalls p = jj_2_rtns[i];
 
@@ -1930,6 +2186,7 @@ if (o.equals(":north")) {
 			   case 1: jj_3_2(); break;
 			   case 2: jj_3_3(); break;
 			   case 3: jj_3_4(); break;
+			   case 4: jj_3_5(); break;
 			 }
 		   }
 		   p = p.next;
